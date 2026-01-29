@@ -61,6 +61,7 @@ export const mockGames: Game[] = [
             id: 'ohio-state',
             name: 'Ohio State Buckeyes',
             shortName: 'OSU',
+            logo: '🌰',
             logoUrl: '',
             record: '8-1',
         },
@@ -68,6 +69,7 @@ export const mockGames: Game[] = [
             id: 'michigan',
             name: 'Michigan Wolverines',
             shortName: 'MICH',
+            logo: '〽️',
             logoUrl: '',
             record: '7-2',
         },
@@ -82,6 +84,7 @@ export const mockGames: Game[] = [
             id: 'indiana',
             name: 'Indiana Hoosiers',
             shortName: 'IU',
+            logo: '🔴',
             logoUrl: '',
             record: '12-3',
         },
@@ -89,6 +92,7 @@ export const mockGames: Game[] = [
             id: 'dayton',
             name: 'Dayton Flyers',
             shortName: 'UD',
+            logo: '✈️',
             logoUrl: '',
             record: '14-2',
         },
@@ -103,6 +107,7 @@ export const mockGames: Game[] = [
             id: 'usc',
             name: 'USC Trojans',
             shortName: 'USC',
+            logo: '⚔️',
             logoUrl: '',
             record: '6-3',
         },
@@ -110,6 +115,7 @@ export const mockGames: Game[] = [
             id: 'ohio-state',
             name: 'Ohio State Buckeyes',
             shortName: 'OSU',
+            logo: '🌰',
             logoUrl: '',
             record: '8-1',
         },
@@ -123,6 +129,7 @@ export const mockGames: Game[] = [
         timeRemaining: '12:45',
     },
 ];
+
 
 export const mockMarkets: PredictionMarket[] = [
     {

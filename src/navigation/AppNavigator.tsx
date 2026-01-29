@@ -1,4 +1,4 @@
-// App Navigation
+// App Navigation with Account and Settings
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -6,7 +6,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, StyleSheet } from 'react-native';
 
 import { useAuthStore } from '../store/authStore';
-import { colors, spacing } from '../theme';
+import { colors, spacing, shadows } from '../theme';
 
 // Auth Screens
 import {
@@ -23,16 +23,27 @@ import {
     LeaderboardScreen,
     RewardsScreen,
     TicketsScreen,
+    AccountScreen,
+    SettingsScreen,
 } from '../screens/main';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
+const AccountStack = createStackNavigator();
 
-// Tab Bar Icon Component
+// Tab Bar Icon Component - Premium styling
 const TabIcon: React.FC<{ emoji: string; focused: boolean }> = ({ emoji, focused }) => (
     <View style={[styles.tabIcon, focused && styles.tabIconFocused]}>
-        <Text style={styles.tabEmoji}>{emoji}</Text>
+        <Text style={[styles.tabEmoji, focused && styles.tabEmojiFocused]}>{emoji}</Text>
     </View>
+);
+
+// Account Stack Navigator (Account + Settings)
+const AccountStackNavigator = () => (
+    <AccountStack.Navigator screenOptions={{ headerShown: false }}>
+        <AccountStack.Screen name="AccountMain" component={AccountScreen} />
+        <AccountStack.Screen name="Settings" component={SettingsScreen} />
+    </AccountStack.Navigator>
 );
 
 // Main Tab Navigator
@@ -44,6 +55,7 @@ const MainTabs = () => (
             tabBarActiveTintColor: colors.primary,
             tabBarInactiveTintColor: colors.textMuted,
             tabBarLabelStyle: styles.tabLabel,
+            tabBarShowLabel: true,
         }}
     >
         <Tab.Screen
@@ -54,14 +66,14 @@ const MainTabs = () => (
             }}
         />
         <Tab.Screen
-            name="Predictions"
+            name="Predict"
             component={PredictionsScreen}
             options={{
                 tabBarIcon: ({ focused }) => <TabIcon emoji="🎯" focused={focused} />,
             }}
         />
         <Tab.Screen
-            name="Leaderboard"
+            name="Ranks"
             component={LeaderboardScreen}
             options={{
                 tabBarIcon: ({ focused }) => <TabIcon emoji="🏆" focused={focused} />,
@@ -79,6 +91,13 @@ const MainTabs = () => (
             component={TicketsScreen}
             options={{
                 tabBarIcon: ({ focused }) => <TabIcon emoji="🎟️" focused={focused} />,
+            }}
+        />
+        <Tab.Screen
+            name="Account"
+            component={AccountStackNavigator}
+            options={{
+                tabBarIcon: ({ focused }) => <TabIcon emoji="👤" focused={focused} />,
             }}
         />
     </Tab.Navigator>
@@ -122,7 +141,8 @@ const styles = StyleSheet.create({
         borderTopWidth: 1,
         paddingTop: spacing.xs,
         paddingBottom: spacing.sm,
-        height: 80,
+        height: 85,
+        ...shadows.lg,
     },
     tabLabel: {
         fontSize: 10,
@@ -130,16 +150,21 @@ const styles = StyleSheet.create({
         marginTop: 2,
     },
     tabIcon: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
         alignItems: 'center',
         justifyContent: 'center',
     },
     tabIconFocused: {
         backgroundColor: colors.primary + '20',
+        ...shadows.glow,
     },
     tabEmoji: {
-        fontSize: 20,
+        fontSize: 22,
+        opacity: 0.7,
+    },
+    tabEmojiFocused: {
+        opacity: 1,
     },
 });

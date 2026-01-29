@@ -48,7 +48,8 @@ export interface Team {
     id: string;
     name: string;
     shortName: string;
-    logoUrl: string;
+    logo: string;       // Emoji for display
+    logoUrl: string;    // URL for actual logo image
     record: string;
 }
 
