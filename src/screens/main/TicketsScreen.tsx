@@ -136,12 +136,12 @@ export const TicketsScreen: React.FC<Props> = ({ navigation }) => {
             <LinearGradient colors={[colors.bgPrimary, colors.bgSecondary]} style={styles.gradient}>
                 {/* Header */}
                 <View style={styles.header}>
-                    <View>
-                        <Text style={styles.title}>Ticket Exchange</Text>
-                        <Text style={styles.subtitle}>Buy & sell tickets with students</Text>
+                    <View style={styles.headerLeft}>
+                        <Text style={styles.title}>Tickets</Text>
+                        <Text style={styles.subtitle}>Buy & sell with students</Text>
                     </View>
                     <Button
-                        title="+ List Ticket"
+                        title="+ List"
                         onPress={() => setShowListModal(true)}
                         variant="outline"
                         size="sm"
@@ -402,8 +402,12 @@ const styles = StyleSheet.create({
         paddingBottom: spacing.md,
     },
     title: {
-        ...typography.h1,
+        ...typography.h2,
         color: colors.textPrimary,
+    },
+    headerLeft: {
+        flex: 1,
+        marginRight: spacing.sm,
     },
     subtitle: {
         ...typography.caption,

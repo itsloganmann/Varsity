@@ -205,9 +205,11 @@ const styles = StyleSheet.create({
     },
     codeInput: {
         textAlign: 'center',
-        fontSize: 24,
+        fontSize: 28,
         letterSpacing: 8,
         fontWeight: '600',
+        height: 60,
+        paddingVertical: spacing.md,
     },
     errorText: {
         color: colors.error,

@@ -41,6 +41,18 @@ export const PredictionsScreen: React.FC<Props> = ({ navigation, route }) => {
 
     const openMarkets = markets.filter(m => m.status === 'open');
 
+    // Demo: Simulate winning a prediction
+    const handleSimulateWin = () => {
+        const winAmount = Math.floor(Math.random() * 300) + 100;
+        const boostedAmount = isAtStadium ? Math.round(winAmount * boostMultiplier) : winAmount;
+        updateCoins((user?.coins || 0) + boostedAmount);
+        Alert.alert(
+            '🎉 You Won!',
+            `Your prediction was correct!\n\n🪙 +${boostedAmount} coins${isAtStadium ? ` (${boostMultiplier}x Stadium Boost!)` : ''}`,
+            [{ text: 'Awesome!' }]
+        );
+    };
+
     const calculatePotentialWin = () => {
         if (!selectedOption || !wagerAmount) return 0;
         const amount = parseInt(wagerAmount) || 0;
@@ -193,6 +205,24 @@ export const PredictionsScreen: React.FC<Props> = ({ navigation, route }) => {
                         <Text style={[styles.tabText, selectedTab === 'my' && styles.tabTextActive]}>
                             My Predictions ({userPredictions.length})
                         </Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Demo: Simulate Win Button */}
+                <View style={styles.simulateSection}>
+                    <TouchableOpacity
+                        style={styles.simulateButton}
+                        onPress={handleSimulateWin}
+                    >
+                        <LinearGradient
+                            colors={gradients.boost}
+                            style={styles.simulateGradient}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                        >
+                            <Text style={styles.simulateText}>🎲 Simulate Win</Text>
+                            <Text style={styles.simulateSubtext}>Demo: instant coins!</Text>
+                        </LinearGradient>
                     </TouchableOpacity>
                 </View>
 
@@ -570,5 +600,27 @@ const styles = StyleSheet.create({
     potentialLabel: {
         ...typography.body,
         color: colors.textSecondary,
+    },
+    simulateSection: {
+        paddingHorizontal: spacing.lg,
+        marginBottom: spacing.md,
+    },
+    simulateButton: {
+        borderRadius: borderRadius.lg,
+        overflow: 'hidden',
+    },
+    simulateGradient: {
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.lg,
+        alignItems: 'center',
+    },
+    simulateText: {
+        ...typography.h3,
+        color: colors.textPrimary,
+    },
+    simulateSubtext: {
+        ...typography.small,
+        color: colors.textSecondary,
+        marginTop: 2,
     },
 });

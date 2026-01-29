@@ -23,14 +23,34 @@ export const LeaderboardScreen: React.FC<Props> = ({ navigation }) => {
     const { user } = useAuthStore();
     const [selectedPeriod, setSelectedPeriod] = useState<'weekly' | 'alltime'>('weekly');
 
+    // Weekly leaderboard - current mock data
+    const weeklyLeaderboard: LeaderboardEntry[] = mockLeaderboard;
+
+    // All-time leaderboard - shuffled order with higher values
+    const allTimeLeaderboard: LeaderboardEntry[] = [
+        { rank: 1, userId: 'user-12', displayName: 'StadiumWarrior', coins: 156800, winRate: 0.71, streak: 12 },
+        { rank: 2, userId: 'user-10', displayName: 'BuckeyeKing', coins: 142500, winRate: 0.69, streak: 6 },
+        { rank: 3, userId: 'user-14', displayName: 'GameDayGuru', coins: 127100, winRate: 0.67, streak: 9 },
+        { rank: 4, userId: 'user-11', displayName: 'SportsProphet', coins: 118200, winRate: 0.65, streak: 4 },
+        { rank: 5, userId: 'user-17', displayName: 'WagerWiz', coins: 103200, winRate: 0.63, streak: 7 },
+        { rank: 6, userId: 'user-13', displayName: 'LuckyLisa', coins: 98400, winRate: 0.62, streak: 3 },
+        { rank: 7, userId: 'user-19', displayName: 'ScoreSniper', coins: 87500, winRate: 0.60, streak: 5 },
+        { rank: 8, userId: 'user-15', displayName: 'PredictorPete', coins: 75900, winRate: 0.58, streak: 2 },
+        { rank: 9, userId: 'user-16', displayName: 'CampusChamp', coins: 64500, winRate: 0.56, streak: 1 },
+        { rank: 10, userId: 'user-18', displayName: 'VarsityVet', coins: 52800, winRate: 0.54, streak: 0 },
+    ];
+
+    // Get base data based on selected period
+    const baseLeaderboard = selectedPeriod === 'weekly' ? weeklyLeaderboard : allTimeLeaderboard;
+
     // Insert current user into leaderboard
     const leaderboardWithUser: LeaderboardEntry[] = [
-        ...mockLeaderboard,
+        ...baseLeaderboard,
         {
             rank: 42,
             userId: user?.id || 'current-user',
             displayName: user?.displayName || 'You',
-            coins: user?.coins || 0,
+            coins: selectedPeriod === 'weekly' ? (user?.coins || 0) : (user?.coins || 0) * 5,
             winRate: user?.totalPredictions ? user.totalWins / user.totalPredictions : 0,
             streak: user?.streak || 0,
             isCurrentUser: true,

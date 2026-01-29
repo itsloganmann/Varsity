@@ -25,11 +25,18 @@ import {
     TicketsScreen,
     AccountScreen,
     SettingsScreen,
+    FriendsScreen,
+    FriendProfileScreen,
+    ChatroomScreen,
+    EditProfileScreen,
+    TermsOfServiceScreen,
+    PrivacyPolicyScreen,
 } from '../screens/main';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 const AccountStack = createStackNavigator();
+const MainStack = createStackNavigator();
 
 // Tab Bar Icon Component - Premium styling
 const TabIcon: React.FC<{ emoji: string; focused: boolean }> = ({ emoji, focused }) => (
@@ -38,11 +45,14 @@ const TabIcon: React.FC<{ emoji: string; focused: boolean }> = ({ emoji, focused
     </View>
 );
 
-// Account Stack Navigator (Account + Settings)
+// Account Stack Navigator (Account + Settings + Legal)
 const AccountStackNavigator = () => (
     <AccountStack.Navigator screenOptions={{ headerShown: false }}>
         <AccountStack.Screen name="AccountMain" component={AccountScreen} />
         <AccountStack.Screen name="Settings" component={SettingsScreen} />
+        <AccountStack.Screen name="EditProfile" component={EditProfileScreen} />
+        <AccountStack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
+        <AccountStack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
     </AccountStack.Navigator>
 );
 
@@ -103,6 +113,16 @@ const MainTabs = () => (
     </Tab.Navigator>
 );
 
+// Main Stack (Tabs + Modal Screens)
+const MainStackNavigator = () => (
+    <MainStack.Navigator screenOptions={{ headerShown: false }}>
+        <MainStack.Screen name="MainTabs" component={MainTabs} />
+        <MainStack.Screen name="Friends" component={FriendsScreen} />
+        <MainStack.Screen name="FriendProfile" component={FriendProfileScreen} />
+        <MainStack.Screen name="Chatroom" component={ChatroomScreen} />
+    </MainStack.Navigator>
+);
+
 // Auth Stack
 const AuthStack = () => (
     <Stack.Navigator
@@ -115,7 +135,7 @@ const AuthStack = () => (
         <Stack.Screen name="EmailVerify" component={EmailVerifyScreen} />
         <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-        <Stack.Screen name="MainApp" component={MainTabs} />
+        <Stack.Screen name="MainApp" component={MainStackNavigator} />
     </Stack.Navigator>
 );
 
@@ -126,7 +146,7 @@ export const AppNavigator = () => {
     return (
         <NavigationContainer>
             {user && isOnboarded ? (
-                <MainTabs />
+                <MainStackNavigator />
             ) : (
                 <AuthStack />
             )}

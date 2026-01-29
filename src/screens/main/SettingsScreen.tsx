@@ -113,19 +113,18 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                                     icon="📛"
                                     label="Display Name"
                                     value={user?.displayName}
-                                    onPress={() => { }}
+                                    onPress={() => navigation.navigate('EditProfile')}
                                 />
                                 <SettingRow
                                     icon="🎭"
                                     label="Avatar"
                                     value="Edit"
-                                    onPress={() => { }}
+                                    onPress={() => navigation.navigate('EditProfile')}
                                 />
                                 <SettingRow
                                     icon="🏫"
                                     label="University"
                                     value={user?.universityName?.split(' ')[0]}
-                                    onPress={() => { }}
                                 />
                             </View>
                         </View>
@@ -196,12 +195,12 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                                 <SettingRow
                                     icon="📄"
                                     label="Terms of Service"
-                                    onPress={() => { }}
+                                    onPress={() => navigation.navigate('TermsOfService')}
                                 />
                                 <SettingRow
                                     icon="🔒"
                                     label="Privacy Policy"
-                                    onPress={() => { }}
+                                    onPress={() => navigation.navigate('PrivacyPolicy')}
                                 />
                             </View>
                         </View>

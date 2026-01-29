@@ -153,32 +153,53 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                             <SectionHeader
                                 title="Live at Stadium"
                                 action={`${friendsAtStadium.length} friends`}
+                                onAction={() => navigation.navigate('Friends')}
                             />
                             <StadiumView
                                 friends={friends}
                                 isUserAtStadium={isAtStadium}
                                 userPosition={isAtStadium ? { x: 50, y: 55 } : undefined}
                             />
+                            {/* Chatroom Button */}
+                            {isAtStadium && (
+                                <TouchableOpacity
+                                    style={styles.chatButton}
+                                    onPress={() => navigation.navigate('Chatroom')}
+                                >
+                                    <Text style={styles.chatButtonText}>💬 Join Stadium Chat</Text>
+                                </TouchableOpacity>
+                            )}
                         </View>
 
                         {/* Friend Activity Feed */}
                         {messages.length > 0 && (
                             <View style={styles.section}>
-                                <SectionHeader title="Friend Activity" />
+                                <SectionHeader
+                                    title="Friend Activity"
+                                    action="See All"
+                                    onAction={() => navigation.navigate('Friends')}
+                                />
                                 <ScrollView
                                     horizontal
                                     showsHorizontalScrollIndicator={false}
                                     contentContainerStyle={styles.activityFeed}
                                 >
-                                    {messages.slice(0, 5).map((msg) => (
-                                        <View key={msg.id} style={styles.activityCard}>
-                                            <Text style={styles.activityAvatar}>{msg.friendAvatar}</Text>
-                                            <Text style={styles.activityName}>{msg.friendName.split(' ')[0]}</Text>
-                                            <Text style={styles.activityText} numberOfLines={2}>
-                                                {msg.content}
-                                            </Text>
-                                        </View>
-                                    ))}
+                                    {messages.slice(0, 5).map((msg) => {
+                                        const friend = friends.find(f => f.id === msg.friendId);
+                                        return (
+                                            <TouchableOpacity
+                                                key={msg.id}
+                                                style={styles.activityCard}
+                                                onPress={() => friend && navigation.navigate('FriendProfile', { friend })}
+                                            >
+                                                <Text style={styles.activityAvatar}>{msg.friendAvatar}</Text>
+                                                <Text style={styles.activityName}>{msg.friendName.split(' ')[0]}</Text>
+                                                <Text style={styles.activityText} numberOfLines={2}>
+                                                    {msg.content}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        );
+                                    })}
                                 </ScrollView>
                             </View>
                         )}
@@ -189,7 +210,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                                 <SectionHeader
                                     title="🔴 Live Now"
                                     action="See All"
-                                    onAction={() => navigation.navigate('Predictions')}
+                                    onAction={() => navigation.navigate('Predict')}
                                 />
                                 {liveGames.map(game => (
                                     <Card key={game.id} style={styles.gameCard}>
@@ -220,12 +241,12 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                             <SectionHeader
                                 title="🔥 Hot Predictions"
                                 action="View All"
-                                onAction={() => navigation.navigate('Predictions')}
+                                onAction={() => navigation.navigate('Predict')}
                             />
                             {hotMarkets.map(market => (
                                 <TouchableOpacity
                                     key={market.id}
-                                    onPress={() => navigation.navigate('Predictions')}
+                                    onPress={() => navigation.navigate('Predict')}
                                 >
                                     <Card style={styles.marketCard}>
                                         <View style={styles.marketHeader}>
@@ -527,5 +548,17 @@ const styles = StyleSheet.create({
     statLabel: {
         ...typography.small,
         color: colors.textMuted,
+    },
+    chatButton: {
+        backgroundColor: colors.primary,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.lg,
+        borderRadius: borderRadius.lg,
+        marginTop: spacing.md,
+        alignItems: 'center',
+    },
+    chatButtonText: {
+        ...typography.bodyBold,
+        color: colors.textPrimary,
     },
 });
