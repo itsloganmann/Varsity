@@ -1,5 +1,5 @@
-// 3D Stadium View with animated friend markers
-import React, { useEffect, useRef } from 'react';
+// Interactive 3D Stadium View
+import React, { useRef, useState } from 'react';
 import {
     View,
     Text,
@@ -8,13 +8,21 @@ import {
     Dimensions,
     TouchableOpacity,
 } from 'react-native';
+import {
+    PanGestureHandler,
+    PinchGestureHandler,
+    State,
+    GestureHandlerRootView,
+    PanGestureHandlerStateChangeEvent,
+    PinchGestureHandlerStateChangeEvent,
+} from 'react-native-gesture-handler';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, spacing, borderRadius, typography, gradients, shadows } from '../../theme';
 import { Friend } from '../../store/friendsStore';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const STADIUM_WIDTH = SCREEN_WIDTH - spacing.lg * 2;
-const STADIUM_HEIGHT = 200;
+const STADIUM_WIDTH = 800; // Virtual width
+const STADIUM_HEIGHT = 600; // Virtual height
 
 interface StadiumViewProps {
     friends: Friend[];
@@ -23,80 +31,66 @@ interface StadiumViewProps {
     onFriendPress?: (friend: Friend) => void;
 }
 
-// Animated pulsing marker for friends
+// Seat Section Definition
+interface Section {
+    id: string;
+    label: string;
+    x: number; // %
+    y: number; // %
+    width: number; // %
+    height: number; // %
+    color: string;
+    rotation?: number;
+}
+
+const SECTIONS: Section[] = [
+    // Endzones
+    { id: 'N', label: 'North End', x: 25, y: 0, width: 50, height: 15, color: '#cc0000' },
+    { id: 'S', label: 'South End', x: 25, y: 85, width: 50, height: 15, color: '#666666' },
+    // Sidelines
+    { id: 'W', label: 'West Side', x: 0, y: 15, width: 15, height: 70, color: '#990000' },
+    { id: 'E', label: 'East Side', x: 85, y: 15, width: 15, height: 70, color: '#990000' },
+    // Corners
+    { id: 'NW', label: 'Sec A', x: 0, y: 0, width: 25, height: 15, color: '#888888' },
+    { id: 'NE', label: 'Sec B', x: 75, y: 0, width: 25, height: 15, color: '#888888' },
+    { id: 'SW', label: 'Sec C', x: 0, y: 85, width: 25, height: 15, color: '#888888' },
+    { id: 'SE', label: 'Sec D', x: 75, y: 85, width: 25, height: 15, color: '#888888' },
+];
+
 const FriendMarker: React.FC<{
     friend: Friend;
+    scale: Animated.AnimatedInterpolation<number>;
     onPress?: () => void;
-}> = ({ friend, onPress }) => {
-    const pulseAnim = useRef(new Animated.Value(1)).current;
-    const glowAnim = useRef(new Animated.Value(0.5)).current;
+}> = ({ friend, scale, onPress }) => {
+    // Inverse scale for markers to keep them readable
+    const invalidScale = scale.interpolate({
+        inputRange: [0.5, 2],
+        outputRange: [1.5, 0.7], // visual compensation
+    });
 
-    useEffect(() => {
-        // Continuous pulse animation
-        Animated.loop(
-            Animated.sequence([
-                Animated.timing(pulseAnim, {
-                    toValue: 1.3,
-                    duration: 1000,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(pulseAnim, {
-                    toValue: 1,
-                    duration: 1000,
-                    useNativeDriver: true,
-                }),
-            ])
-        ).start();
-
-        // Glow animation
-        Animated.loop(
-            Animated.sequence([
-                Animated.timing(glowAnim, {
-                    toValue: 1,
-                    duration: 1500,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(glowAnim, {
-                    toValue: 0.5,
-                    duration: 1500,
-                    useNativeDriver: true,
-                }),
-            ])
-        ).start();
-    }, []);
-
-    const position = friend.stadiumPosition || { x: 50, y: 50 };
+    // Determine position based on section or random
+    const pos = friend.stadiumPosition || { x: 50, y: 50 };
 
     return (
-        <TouchableOpacity
+        <Animated.View
             style={[
-                styles.markerContainer,
+                styles.markerWrapper,
                 {
-                    left: `${position.x}%`,
-                    top: `${position.y}%`,
-                },
+                    left: `${pos.x}%`,
+                    top: `${pos.y}%`,
+                    transform: [{ scale: invalidScale }]
+                }
             ]}
-            onPress={onPress}
         >
-            {/* Pulse ring */}
-            <Animated.View
-                style={[
-                    styles.markerPulse,
-                    {
-                        transform: [{ scale: pulseAnim }],
-                        opacity: glowAnim,
-                    },
-                ]}
-            />
-            {/* Avatar */}
-            <View style={styles.markerAvatar}>
-                <Text style={styles.markerEmoji}>{friend.avatar}</Text>
-            </View>
-            {/* Name label */}
-            <View style={styles.markerLabel}>
-                <Text style={styles.markerName}>{friend.name.split(' ')[0]}</Text>
-            </View>
-        </TouchableOpacity>
+            <TouchableOpacity onPress={onPress}>
+                <View style={[styles.markerAvatar, { borderColor: friend.isOnline ? colors.success : colors.textMuted }]}>
+                    <Text style={styles.markerEmoji}>{friend.avatar}</Text>
+                </View>
+                <View style={styles.markerLabel}>
+                    <Text style={styles.markerName}>{friend.name.split(' ')[0]}</Text>
+                </View>
+            </TouchableOpacity>
+        </Animated.View>
     );
 };
 
@@ -106,320 +100,322 @@ export const StadiumView: React.FC<StadiumViewProps> = ({
     userPosition,
     onFriendPress,
 }) => {
-    const friendsAtStadium = friends.filter(f => f.isAtStadium && f.stadiumPosition);
+    // Animation Values
+    const translateX = useRef(new Animated.Value(0)).current;
+    const translateY = useRef(new Animated.Value(0)).current;
+    const scale = useRef(new Animated.Value(0.6)).current; // Start zoomed out
+
+    const lastScale = useRef(0.6);
+    const lastOffset = useRef({ x: 0, y: 0 });
+
+    const onPanEvent = Animated.event(
+        [{ nativeEvent: { translationX: translateX, translationY: translateY } }],
+        { useNativeDriver: false }
+    );
+
+    const onPinchEvent = Animated.event(
+        [{ nativeEvent: { scale: scale } }],
+        { useNativeDriver: false }
+    );
+
+    const handlePanStateChange = (event: PanGestureHandlerStateChangeEvent) => {
+        if (event.nativeEvent.oldState === State.ACTIVE) {
+            lastOffset.current.x += event.nativeEvent.translationX;
+            lastOffset.current.y += event.nativeEvent.translationY;
+            translateX.setOffset(lastOffset.current.x);
+            translateX.setValue(0);
+            translateY.setOffset(lastOffset.current.y);
+            translateY.setValue(0);
+        }
+    };
+
+    const handlePinchStateChange = (event: PinchGestureHandlerStateChangeEvent) => {
+        if (event.nativeEvent.oldState === State.ACTIVE) {
+            lastScale.current *= event.nativeEvent.scale;
+            scale.setOffset(lastScale.current);
+            scale.setValue(1);
+        }
+    };
 
     return (
-        <View style={styles.container}>
-            {/* Stadium outline with 3D effect */}
-            <View style={styles.stadiumWrapper}>
-                <LinearGradient
-                    colors={gradients.stadium}
-                    style={styles.stadium}
+        <GestureHandlerRootView style={styles.container}>
+            <View style={styles.viewport}>
+                <PanGestureHandler
+                    onGestureEvent={onPanEvent}
+                    onHandlerStateChange={handlePanStateChange}
+                    minPointers={1}
+                    maxPointers={2}
                 >
-                    {/* Stadium 3D border effect */}
-                    <View style={styles.stadiumBorder} />
-
-                    {/* Field markings */}
-                    <View style={styles.field}>
-                        {/* End zones */}
-                        <View style={styles.endZoneLeft}>
-                            <Text style={styles.endZoneText}>OSU</Text>
-                        </View>
-                        <View style={styles.endZoneRight}>
-                            <Text style={styles.endZoneText}>VISITOR</Text>
-                        </View>
-
-                        {/* Yard lines */}
-                        <View style={styles.yardLines}>
-                            {[10, 20, 30, 40, 50, 40, 30, 20, 10].map((yard, i) => (
-                                <View key={i} style={styles.yardLine}>
-                                    <View style={styles.yardLineInner} />
-                                </View>
-                            ))}
-                        </View>
-
-                        {/* Center circle */}
-                        <View style={styles.centerCircle} />
-                    </View>
-
-                    {/* Stands (curved top and bottom) */}
-                    <View style={styles.standsTop}>
-                        <LinearGradient
-                            colors={['rgba(204, 0, 0, 0.3)', 'rgba(102, 0, 0, 0.2)']}
-                            style={styles.standsGradient}
-                        />
-                    </View>
-                    <View style={styles.standsBottom}>
-                        <LinearGradient
-                            colors={['rgba(204, 0, 0, 0.3)', 'rgba(102, 0, 0, 0.2)']}
-                            style={styles.standsGradient}
-                        />
-                    </View>
-
-                    {/* Friend markers */}
-                    {friendsAtStadium.map(friend => (
-                        <FriendMarker
-                            key={friend.id}
-                            friend={friend}
-                            onPress={() => onFriendPress?.(friend)}
-                        />
-                    ))}
-
-                    {/* User marker (if at stadium) */}
-                    {isUserAtStadium && userPosition && (
-                        <View
-                            style={[
-                                styles.userMarker,
-                                {
-                                    left: `${userPosition.x}%`,
-                                    top: `${userPosition.y}%`,
-                                },
-                            ]}
+                    <Animated.View>
+                        <PinchGestureHandler
+                            onGestureEvent={onPinchEvent}
+                            onHandlerStateChange={handlePinchStateChange}
                         >
-                            <View style={styles.userMarkerRing}>
-                                <Text style={styles.userMarkerText}>You</Text>
-                            </View>
-                        </View>
-                    )}
-                </LinearGradient>
+                            <Animated.View
+                                style={[
+                                    styles.contentContainer,
+                                    {
+                                        transform: [
+                                            { translateX },
+                                            { translateY },
+                                            { scale },
+                                            { perspective: 1000 },
+                                            { rotateX: '15deg' } // 3D tilt
+                                        ]
+                                    }
+                                ]}
+                            >
+                                {/* Stadium Base */}
+                                <View style={styles.stadiumBase}>
+                                    {/* Field */}
+                                    <View style={styles.field}>
+                                        <View style={styles.endZoneTop}><Text style={styles.ezText}>OHIO STATE</Text></View>
+                                        <View style={styles.fieldGrass}>
+                                            <View style={styles.fiftyLine} />
+                                            <View style={[styles.hashBox, { top: '30%' }]} />
+                                            <View style={[styles.hashBox, { bottom: '30%' }]} />
+                                        </View>
+                                        <View style={styles.endZoneBottom}><Text style={styles.ezText}>VISITOR</Text></View>
+                                    </View>
 
-                {/* Stadium label */}
-                <View style={styles.stadiumLabel}>
-                    <Text style={styles.stadiumName}>Ohio Stadium</Text>
-                    <View style={styles.liveDot} />
-                    <Text style={styles.liveText}>LIVE</Text>
+                                    {/* Sections */}
+                                    {SECTIONS.map((sec) => (
+                                        <View
+                                            key={sec.id}
+                                            style={[
+                                                styles.section,
+                                                {
+                                                    left: `${sec.x}%`,
+                                                    top: `${sec.y}%`,
+                                                    width: `${sec.width}%`,
+                                                    height: `${sec.height}%`,
+                                                    backgroundColor: sec.color,
+                                                }
+                                            ]}
+                                        >
+                                            <Text style={styles.sectionLabel}>{sec.label}</Text>
+                                            <View style={styles.rowLines} />
+                                        </View>
+                                    ))}
+
+                                    {/* Friends */}
+                                    {friends.filter(f => f.isAtStadium).map(friend => (
+                                        <FriendMarker
+                                            key={friend.id}
+                                            friend={friend}
+                                            scale={scale}
+                                            onPress={() => onFriendPress?.(friend)}
+                                        />
+                                    ))}
+
+                                    {/* User */}
+                                    {isUserAtStadium && (
+                                        <Animated.View
+                                            style={[
+                                                styles.userMarker,
+                                                {
+                                                    left: '48%',
+                                                    top: '48%',
+                                                    transform: [{ scale: Animated.divide(1, scale) }]
+                                                }
+                                            ]}
+                                        >
+                                            <View style={styles.userDot} />
+                                            <View style={styles.userRing} />
+                                        </Animated.View>
+                                    )}
+                                </View>
+                            </Animated.View>
+                        </PinchGestureHandler>
+                    </Animated.View>
+                </PanGestureHandler>
+
+                <View style={styles.controls}>
+                    <Text style={styles.controlText}>🖐️ Drag • 🤏 Pinch to Zoom</Text>
                 </View>
             </View>
-
-            {/* Legend */}
-            <View style={styles.legend}>
-                <View style={styles.legendItem}>
-                    <View style={[styles.legendDot, { backgroundColor: colors.boostActive }]} />
-                    <Text style={styles.legendText}>{friendsAtStadium.length} friends here</Text>
-                </View>
-            </View>
-        </View>
+        </GestureHandlerRootView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        marginVertical: spacing.md,
-    },
-    stadiumWrapper: {
+        height: 350,
+        backgroundColor: colors.bgElevated,
         borderRadius: borderRadius.xl,
         overflow: 'hidden',
-        ...shadows.lg,
+        marginVertical: spacing.md,
+        borderWidth: 1,
+        borderColor: colors.cardBorder,
     },
-    stadium: {
+    viewport: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    contentContainer: {
         width: STADIUM_WIDTH,
         height: STADIUM_HEIGHT,
-        position: 'relative',
-        borderRadius: borderRadius.xl,
-        borderWidth: 2,
-        borderColor: 'rgba(255, 255, 255, 0.1)',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
-    stadiumBorder: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        borderRadius: borderRadius.xl - 2,
-        borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.05)',
+    stadiumBase: {
+        width: '100%',
+        height: '100%',
+        backgroundColor: '#333',
+        borderRadius: 50,
+        position: 'relative',
+        ...shadows.lg,
     },
     field: {
         position: 'absolute',
-        top: '25%',
-        left: '10%',
-        right: '10%',
-        bottom: '25%',
-        backgroundColor: 'rgba(45, 90, 39, 0.8)',
-        borderRadius: borderRadius.sm,
+        left: '20%',
+        top: '20%',
+        width: '60%',
+        height: '60%',
+        backgroundColor: '#4C8527',
+        borderRadius: 4,
         borderWidth: 2,
-        borderColor: 'rgba(255, 255, 255, 0.3)',
+        borderColor: 'white',
+        zIndex: 10,
     },
-    endZoneLeft: {
-        position: 'absolute',
-        left: 0,
-        top: 0,
-        bottom: 0,
-        width: '10%',
-        backgroundColor: 'rgba(204, 0, 0, 0.5)',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    endZoneRight: {
-        position: 'absolute',
-        right: 0,
-        top: 0,
-        bottom: 0,
-        width: '10%',
-        backgroundColor: 'rgba(102, 102, 102, 0.5)',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    endZoneText: {
-        ...typography.micro,
-        color: 'rgba(255, 255, 255, 0.6)',
-        transform: [{ rotate: '-90deg' }],
-    },
-    yardLines: {
-        position: 'absolute',
-        left: '10%',
-        right: '10%',
-        top: 0,
-        bottom: 0,
-        flexDirection: 'row',
-        justifyContent: 'space-evenly',
-    },
-    yardLine: {
-        width: 1,
-        height: '100%',
-        alignItems: 'center',
-    },
-    yardLineInner: {
-        width: 1,
-        height: '100%',
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    },
-    centerCircle: {
-        position: 'absolute',
-        left: '50%',
-        top: '50%',
-        width: 20,
-        height: 20,
-        marginLeft: -10,
-        marginTop: -10,
-        borderRadius: 10,
-        borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.3)',
-    },
-    standsTop: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: '22%',
-    },
-    standsBottom: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: '22%',
-    },
-    standsGradient: {
+    fieldGrass: {
         flex: 1,
+        position: 'relative',
+        borderTopWidth: 2,
+        borderBottomWidth: 2,
+        borderColor: 'white',
     },
-    markerContainer: {
-        position: 'absolute',
+    endZoneTop: {
+        height: '10%',
+        backgroundColor: '#bb0000',
         alignItems: 'center',
-        marginLeft: -18,
-        marginTop: -18,
+        justifyContent: 'center',
     },
-    markerPulse: {
+    endZoneBottom: {
+        height: '10%',
+        backgroundColor: '#444',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    ezText: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: 'white',
+        opacity: 0.8,
+    },
+    fiftyLine: {
         position: 'absolute',
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        backgroundColor: colors.boostActive,
-        opacity: 0.3,
+        top: '50%',
+        left: 0,
+        right: 0,
+        height: 2,
+        backgroundColor: 'rgba(255,255,255,0.8)',
+    },
+    hashBox: {
+        position: 'absolute',
+        left: '30%',
+        right: '30%',
+        height: 1,
+        borderTopWidth: 1,
+        borderColor: 'rgba(255,255,255,0.5)',
+        borderStyle: 'dashed',
+    },
+    section: {
+        position: 'absolute',
+        borderRadius: 4,
+        padding: 4,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.2)',
+    },
+    sectionLabel: {
+        color: 'white',
+        fontSize: 14,
+        fontWeight: '900',
+        textShadowColor: 'black',
+        textShadowRadius: 2,
+    },
+    rowLines: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+        backgroundColor: 'transparent',
+    },
+
+    // Markers
+    markerWrapper: {
+        position: 'absolute',
+        zIndex: 50,
+        marginLeft: -15,
+        marginTop: -30,
     },
     markerAvatar: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: colors.bgCard,
+        width: 30,
+        height: 30,
+        borderRadius: 15,
+        backgroundColor: 'white',
         alignItems: 'center',
         justifyContent: 'center',
         borderWidth: 2,
-        borderColor: colors.boostActive,
-        ...shadows.glowOrange,
     },
     markerEmoji: {
         fontSize: 16,
     },
     markerLabel: {
-        marginTop: 2,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        backgroundColor: 'rgba(0,0,0,0.7)',
         paddingHorizontal: 4,
-        paddingVertical: 1,
         borderRadius: 4,
+        marginTop: 2,
     },
     markerName: {
-        ...typography.micro,
-        color: colors.textPrimary,
-        fontSize: 8,
+        color: 'white',
+        fontSize: 10,
+        fontWeight: 'bold',
     },
+
+    // User Marker
     userMarker: {
         position: 'absolute',
+        width: 40,
+        height: 40,
         alignItems: 'center',
-        marginLeft: -20,
-        marginTop: -20,
+        justifyContent: 'center',
+        zIndex: 60,
     },
-    userMarkerRing: {
+    userDot: {
+        width: 14,
+        height: 14,
+        borderRadius: 7,
+        backgroundColor: colors.primary,
+        borderWidth: 2,
+        borderColor: 'white',
+    },
+    userRing: {
+        position: 'absolute',
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: colors.primary,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 3,
-        borderColor: colors.textPrimary,
-        ...shadows.glow,
+        borderWidth: 2,
+        borderColor: colors.primary,
+        opacity: 0.5,
     },
-    userMarkerText: {
-        ...typography.micro,
-        color: colors.textPrimary,
-        fontWeight: '700',
-    },
-    stadiumLabel: {
+
+    controls: {
         position: 'absolute',
-        top: spacing.sm,
-        left: spacing.sm,
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
-        paddingHorizontal: spacing.sm,
-        paddingVertical: spacing.xxs,
-        borderRadius: borderRadius.full,
+        bottom: 12,
+        right: 12,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 12,
     },
-    stadiumName: {
-        ...typography.micro,
-        color: colors.textPrimary,
-        marginRight: spacing.xs,
-    },
-    liveDot: {
-        width: 6,
-        height: 6,
-        borderRadius: 3,
-        backgroundColor: colors.error,
-        marginRight: 4,
-    },
-    liveText: {
-        ...typography.micro,
-        color: colors.error,
-        fontSize: 8,
-    },
-    legend: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        marginTop: spacing.sm,
-    },
-    legendItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    legendDot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        marginRight: spacing.xs,
-    },
-    legendText: {
-        ...typography.small,
-        color: colors.textSecondary,
+    controlText: {
+        color: 'white',
+        fontSize: 10,
+        fontWeight: '600',
     },
 });

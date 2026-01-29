@@ -1,4 +1,4 @@
-// Enhanced Home Screen with 3D Stadium and Friends Feed
+// Enhanced Home Screen with Polymarket-style Design
 import React, { useEffect, useState } from 'react';
 import {
     View,
@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, spacing, borderRadius, typography, gradients, shadows } from '../../theme';
+import { colors, spacing, borderRadius, typography, gradients, shadows, commonStyles } from '../../theme';
 import { Card, CoinBalance, Badge, SectionHeader } from '../../components/common';
 import { StadiumView } from '../../components/stadium';
 import { useAuthStore } from '../../store/authStore';
@@ -24,6 +24,15 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 interface Props {
     navigation: any;
 }
+
+// Helper to convert American odds to probability %
+const getProbability = (odds: number): number => {
+    if (odds > 0) {
+        return Math.round((100 / (odds + 100)) * 100);
+    } else {
+        return Math.round((Math.abs(odds) / (Math.abs(odds) + 100)) * 100);
+    }
+};
 
 // Toast notification for friend activity
 const ActivityToast: React.FC<{ message: FriendMessage; onDismiss: () => void }> = ({
@@ -88,225 +97,168 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     }, [messages]);
 
     const liveGames = games.filter(g => g.status === 'live');
-    const upcomingGames = games.filter(g => g.status === 'upcoming').slice(0, 3);
-    const hotMarkets = markets.filter(m => m.status === 'open').slice(0, 2);
+    const hotMarkets = markets.filter(m => m.status === 'open').slice(0, 3);
     const friendsAtStadium = friends.filter(f => f.isAtStadium);
 
     return (
         <View style={styles.container}>
-            <LinearGradient colors={gradients.dark} style={styles.gradient}>
-                <SafeAreaView edges={['top']} style={styles.safeArea}>
-                    {/* Toast Notification */}
-                    {currentToast && (
-                        <ActivityToast
-                            message={currentToast}
-                            onDismiss={() => setCurrentToast(null)}
-                        />
+            <SafeAreaView edges={['top']} style={styles.safeArea}>
+                {/* Toast Notification */}
+                {currentToast && (
+                    <ActivityToast
+                        message={currentToast}
+                        onDismiss={() => setCurrentToast(null)}
+                    />
+                )}
+
+                {/* Polymarket-style Header */}
+                <View style={styles.header}>
+                    <Text style={styles.headerTitle}>Markets</Text>
+                    <View style={styles.headerRight}>
+                        <TouchableOpacity
+                            style={[styles.locationBadge, isAtStadium && styles.locationBadgeActive]}
+                            onPress={() => simulateStadiumPresence(!isAtStadium)}
+                        >
+                            <Text style={styles.locationIcon}>{isAtStadium ? '🔥' : '🏟️'}</Text>
+                            <Text style={styles.locationText}>
+                                {isAtStadium ? `${boostMultiplier}x Boost` : 'Simulate'}
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.coinContainer}>
+                            <Text style={styles.coinText}>{user?.coins?.toLocaleString()}</Text>
+                            <Text style={styles.coinSymbol}>₵</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+
+                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+
+                    {/* Internship Challenge Banner (New Phase 3) */}
+                    <TouchableOpacity
+                        style={styles.promoBanner}
+                        onPress={() => navigation.navigate('PromotionalChallenge')}
+                    >
+                        <LinearGradient
+                            colors={['#161B22', '#0D1117']}
+                            style={styles.promoContent}
+                        >
+                            <View style={styles.promoLeft}>
+                                <Text style={styles.promoBadge}>EXPERIENCE</Text>
+                                <Text style={styles.promoTitle}>Win a Sports Analytics Internship</Text>
+                                <Text style={styles.promoSubtitle}>Predict 4 weeks of games perfectly.</Text>
+                            </View>
+                            <Text style={styles.promoIcon}>🏆</Text>
+                        </LinearGradient>
+                    </TouchableOpacity>
+
+                    {/* Featured / Live Banner */}
+                    {liveGames.length > 0 && (
+                        <View style={styles.featuredContainer}>
+                            {liveGames.map(game => (
+                                <View key={game.id} style={styles.liveGameRow}>
+                                    <View style={styles.liveIndicator}>
+                                        <View style={styles.redDot} />
+                                        <Text style={styles.liveText}>LIVE</Text>
+                                    </View>
+                                    <Text style={styles.liveGameText}>
+                                        {game.awayTeam.shortName} {game.awayScore} - {game.homeTeam.shortName} {game.homeScore}
+                                    </Text>
+                                    <Text style={styles.liveGameTime}>{game.quarter}</Text>
+                                </View>
+                            ))}
+                        </View>
                     )}
 
-                    <ScrollView showsVerticalScrollIndicator={false}>
-                        {/* Header */}
-                        <View style={styles.header}>
-                            <View>
-                                <Text style={styles.greeting}>
-                                    {getGreeting()}, {user?.displayName?.split(' ')[0] || 'Fan'}
-                                </Text>
-                                <Text style={styles.subtitle}>
-                                    {isAtStadium ? '🏟️ You\'re at the game!' : 'Ready to predict?'}
-                                </Text>
-                            </View>
-                            <TouchableOpacity style={styles.coinContainer}>
-                                <CoinBalance amount={user?.coins || 0} size="md" />
-                            </TouchableOpacity>
-                        </View>
-
-                        {/* Stadium Boost Toggle (Demo) */}
-                        <View style={styles.boostSection}>
+                    {/* Trending Markets - List View */}
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>Trending</Text>
+                        {hotMarkets.map(market => (
                             <TouchableOpacity
-                                style={[styles.boostToggle, isAtStadium && styles.boostToggleActive]}
-                                onPress={() => simulateStadiumPresence(!isAtStadium)}
+                                key={market.id}
+                                style={styles.marketRow}
+                                onPress={() => navigation.navigate('Predict')}
                             >
-                                <LinearGradient
-                                    colors={isAtStadium ? gradients.boost : ['transparent', 'transparent']}
-                                    style={styles.boostGradient}
-                                >
-                                    <Text style={styles.boostIcon}>{isAtStadium ? '🔥' : '🏟️'}</Text>
-                                    <View style={styles.boostText}>
-                                        <Text style={styles.boostTitle}>
-                                            {isAtStadium ? `Stadium Boost Active` : 'Simulate Stadium'}
-                                        </Text>
-                                        <Text style={styles.boostSubtitle}>
-                                            {isAtStadium ? `${boostMultiplier}x multiplier on wins` : 'Tap to test booth mode'}
-                                        </Text>
+                                <View style={styles.marketInfo}>
+                                    <View style={styles.marketHeaderRow}>
+                                        {market.isStadiumExclusive && (
+                                            <Text style={styles.stadiumTag}>🏟️ STADIUM ONLY</Text>
+                                        )}
+                                        <Text style={styles.marketTitle} numberOfLines={2}>{market.title}</Text>
                                     </View>
-                                    {isAtStadium && (
-                                        <View style={styles.boostBadge}>
-                                            <Text style={styles.boostBadgeText}>{boostMultiplier}x</Text>
-                                        </View>
-                                    )}
-                                </LinearGradient>
-                            </TouchableOpacity>
-                        </View>
+                                </View>
 
-                        {/* 3D Stadium View */}
-                        <View style={styles.section}>
-                            <SectionHeader
-                                title="Live at Stadium"
-                                action={`${friendsAtStadium.length} friends`}
-                                onAction={() => navigation.navigate('Friends')}
-                            />
+                                <View style={styles.outcomesContainer}>
+                                    {market.options.slice(0, 2).map((opt, index) => {
+                                        const probability = getProbability(opt.odds);
+                                        const isYes = index === 0; // Simplified assumption for demo
+                                        const barColor = isYes ? colors.yes : colors.no;
+
+                                        return (
+                                            <View key={opt.id} style={styles.outcomeButton}>
+                                                <View style={[
+                                                    StyleSheet.absoluteFill,
+                                                    { backgroundColor: barColor, opacity: 0.15, width: `${probability}%` }
+                                                ]} />
+                                                <Text style={[styles.outcomeName, { color: barColor }]}>
+                                                    {opt.label}
+                                                </Text>
+                                                <Text style={[styles.outcomeProb, { color: colors.textPrimary }]}>
+                                                    {probability}%
+                                                </Text>
+                                            </View>
+                                        );
+                                    })}
+                                </View>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+
+                    {/* Interactive Stadium Preview (Smaller, integrated) */}
+                    <View style={styles.section}>
+                        <View style={styles.sectionHeaderRow}>
+                            <Text style={styles.sectionTitle}>Stadium Activity</Text>
+                            <Text style={styles.sectionAction}>{friendsAtStadium.length} Friends Here</Text>
+                        </View>
+                        <View style={styles.stadiumWrapper}>
                             <StadiumView
                                 friends={friends}
                                 isUserAtStadium={isAtStadium}
                                 userPosition={isAtStadium ? { x: 50, y: 55 } : undefined}
                             />
-                            {/* Chatroom Button */}
                             {isAtStadium && (
                                 <TouchableOpacity
-                                    style={styles.chatButton}
+                                    style={styles.chatOverlayButton}
                                     onPress={() => navigation.navigate('Chatroom')}
                                 >
-                                    <Text style={styles.chatButtonText}>💬 Join Stadium Chat</Text>
+                                    <Text style={styles.chatButtonText}>Join Chat</Text>
                                 </TouchableOpacity>
                             )}
                         </View>
+                    </View>
 
-                        {/* Friend Activity Feed */}
-                        {messages.length > 0 && (
-                            <View style={styles.section}>
-                                <SectionHeader
-                                    title="Friend Activity"
-                                    action="See All"
-                                    onAction={() => navigation.navigate('Friends')}
-                                />
-                                <ScrollView
-                                    horizontal
-                                    showsHorizontalScrollIndicator={false}
-                                    contentContainerStyle={styles.activityFeed}
-                                >
-                                    {messages.slice(0, 5).map((msg) => {
-                                        const friend = friends.find(f => f.id === msg.friendId);
-                                        return (
-                                            <TouchableOpacity
-                                                key={msg.id}
-                                                style={styles.activityCard}
-                                                onPress={() => friend && navigation.navigate('FriendProfile', { friend })}
-                                            >
-                                                <Text style={styles.activityAvatar}>{msg.friendAvatar}</Text>
-                                                <Text style={styles.activityName}>{msg.friendName.split(' ')[0]}</Text>
-                                                <Text style={styles.activityText} numberOfLines={2}>
-                                                    {msg.content}
-                                                </Text>
-                                            </TouchableOpacity>
-                                        );
-                                    })}
-                                </ScrollView>
-                            </View>
-                        )}
-
-                        {/* Live Games */}
-                        {liveGames.length > 0 && (
-                            <View style={styles.section}>
-                                <SectionHeader
-                                    title="🔴 Live Now"
-                                    action="See All"
-                                    onAction={() => navigation.navigate('Predict')}
-                                />
-                                {liveGames.map(game => (
-                                    <Card key={game.id} style={styles.gameCard}>
-                                        <View style={styles.gameHeader}>
-                                            <Badge text="LIVE" variant="error" />
-                                            <Text style={styles.gameTime}>Q2 • 8:42</Text>
-                                        </View>
-                                        <View style={styles.gameTeams}>
-                                            <View style={styles.team}>
-                                                <Text style={styles.teamLogo}>{game.awayTeam.logo}</Text>
-                                                <Text style={styles.teamName}>{game.awayTeam.shortName}</Text>
-                                                <Text style={styles.teamScore}>21</Text>
-                                            </View>
-                                            <Text style={styles.vs}>@</Text>
-                                            <View style={styles.team}>
-                                                <Text style={styles.teamLogo}>{game.homeTeam.logo}</Text>
-                                                <Text style={styles.teamName}>{game.homeTeam.shortName}</Text>
-                                                <Text style={styles.teamScore}>28</Text>
-                                            </View>
-                                        </View>
-                                    </Card>
-                                ))}
-                            </View>
-                        )}
-
-                        {/* Hot Markets */}
+                    {/* Recent Activity (Text based, dense) */}
+                    {messages.length > 0 && (
                         <View style={styles.section}>
-                            <SectionHeader
-                                title="🔥 Hot Predictions"
-                                action="View All"
-                                onAction={() => navigation.navigate('Predict')}
-                            />
-                            {hotMarkets.map(market => (
-                                <TouchableOpacity
-                                    key={market.id}
-                                    onPress={() => navigation.navigate('Predict')}
-                                >
-                                    <Card style={styles.marketCard}>
-                                        <View style={styles.marketHeader}>
-                                            {market.isStadiumExclusive && (
-                                                <Badge text="🏟️ Stadium" variant="boost" />
-                                            )}
-                                            {market.type === 'flash_prop' && (
-                                                <Badge text="⚡ Flash" variant="warning" />
-                                            )}
-                                        </View>
-                                        <Text style={styles.marketTitle}>{market.title}</Text>
-                                        <View style={styles.marketOptions}>
-                                            {market.options.slice(0, 2).map(opt => (
-                                                <View key={opt.id} style={styles.marketOption}>
-                                                    <Text style={styles.optionLabel}>{opt.label}</Text>
-                                                    <Text style={[
-                                                        styles.optionOdds,
-                                                        opt.odds > 0 ? styles.oddsGreen : styles.oddsRed,
-                                                    ]}>
-                                                        {opt.odds > 0 ? '+' : ''}{opt.odds}
-                                                    </Text>
-                                                </View>
-                                            ))}
-                                        </View>
-                                    </Card>
-                                </TouchableOpacity>
+                            <Text style={styles.sectionTitle}>Feed</Text>
+                            {messages.slice(0, 4).map((msg) => (
+                                <View key={msg.id} style={styles.feedItem}>
+                                    <Text style={styles.feedAvatar}>{msg.friendAvatar}</Text>
+                                    <View style={styles.feedContent}>
+                                        <Text style={styles.feedText}>
+                                            <Text style={styles.feedName}>{msg.friendName}</Text> {msg.content}
+                                        </Text>
+                                        <Text style={styles.feedTime}>2m ago</Text>
+                                    </View>
+                                </View>
                             ))}
                         </View>
+                    )}
 
-                        {/* Quick Stats */}
-                        <View style={styles.section}>
-                            <View style={styles.statsRow}>
-                                <View style={styles.statBox}>
-                                    <Text style={styles.statValue}>{user?.totalPredictions || 0}</Text>
-                                    <Text style={styles.statLabel}>Predictions</Text>
-                                </View>
-                                <View style={styles.statBox}>
-                                    <Text style={styles.statValue}>{user?.totalWins || 0}</Text>
-                                    <Text style={styles.statLabel}>Wins</Text>
-                                </View>
-                                <View style={styles.statBox}>
-                                    <Text style={styles.statValue}>{user?.streak || 0}🔥</Text>
-                                    <Text style={styles.statLabel}>Streak</Text>
-                                </View>
-                            </View>
-                        </View>
-
-                        <View style={{ height: 100 }} />
-                    </ScrollView>
-                </SafeAreaView>
-            </LinearGradient>
+                    <View style={{ height: 100 }} />
+                </ScrollView>
+            </SafeAreaView>
         </View>
     );
-};
-
-const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
 };
 
 const styles = StyleSheet.create({
@@ -314,251 +266,330 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: colors.bgPrimary,
     },
-    gradient: {
-        flex: 1,
-    },
     safeArea: {
         flex: 1,
+    },
+    scrollContent: {
+        paddingBottom: spacing.xxl,
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: spacing.lg,
-        paddingTop: spacing.md,
-        paddingBottom: spacing.md,
+        paddingVertical: spacing.md,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+        backgroundColor: colors.bgPrimary,
     },
-    greeting: {
-        ...typography.h2,
+    headerTitle: {
+        fontSize: 22,
+        fontWeight: '700',
         color: colors.textPrimary,
+        letterSpacing: -0.5,
     },
-    subtitle: {
-        ...typography.caption,
-        color: colors.textSecondary,
-        marginTop: 2,
-    },
-    coinContainer: {
-        backgroundColor: colors.bgCard,
-        paddingHorizontal: spacing.md,
-        paddingVertical: spacing.sm,
-        borderRadius: borderRadius.full,
-        borderWidth: 1,
-        borderColor: colors.cardBorder,
-    },
-    boostSection: {
-        paddingHorizontal: spacing.lg,
-        marginBottom: spacing.md,
-    },
-    boostToggle: {
-        borderRadius: borderRadius.xl,
-        overflow: 'hidden',
-        borderWidth: 1,
-        borderColor: colors.cardBorder,
-    },
-    boostToggleActive: {
-        borderColor: colors.boostActive,
-        ...shadows.glowOrange,
-    },
-    boostGradient: {
+    headerRight: {
         flexDirection: 'row',
         alignItems: 'center',
+        gap: spacing.sm,
+    },
+    coinContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.bgSecondary,
+        paddingHorizontal: spacing.md,
+        paddingVertical: 6,
+        borderRadius: borderRadius.sm,
+        borderWidth: 1,
+        borderColor: colors.border,
+    },
+    coinText: {
+        ...typography.mono,
+        color: colors.gold,
+        fontWeight: '700',
+        fontSize: 14,
+    },
+    coinSymbol: {
+        color: colors.gold,
+        marginLeft: spacing.xs,
+        fontSize: 14,
+    },
+    locationBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: spacing.md,
+        paddingVertical: 6,
+        borderRadius: borderRadius.sm,
+        backgroundColor: colors.bgSecondary,
+        borderWidth: 1,
+        borderColor: colors.border,
+        gap: 4,
+    },
+    locationBadgeActive: {
+        borderColor: colors.boostActive, // Using alias
+        backgroundColor: 'rgba(210, 153, 34, 0.1)',
+    },
+    locationIcon: {
+        fontSize: 12,
+    },
+    locationText: {
+        ...typography.caption,
+        color: colors.textSecondary,
+        fontWeight: '600',
+    },
+    // Promo Banner
+    promoBanner: {
+        marginHorizontal: spacing.lg,
+        marginTop: spacing.lg,
+        borderRadius: borderRadius.lg,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: colors.gold,
+    },
+    promoContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         padding: spacing.md,
     },
-    boostIcon: {
-        fontSize: 28,
-        marginRight: spacing.md,
-    },
-    boostText: {
+    promoLeft: {
         flex: 1,
     },
-    boostTitle: {
-        ...typography.bodyBold,
-        color: colors.textPrimary,
+    promoBadge: {
+        fontSize: 10,
+        fontWeight: '700',
+        color: colors.gold,
+        marginBottom: 4,
+        letterSpacing: 1,
     },
-    boostSubtitle: {
-        ...typography.small,
+    promoTitle: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: colors.textPrimary,
+        marginBottom: 2,
+    },
+    promoSubtitle: {
+        fontSize: 12,
         color: colors.textSecondary,
     },
-    boostBadge: {
-        backgroundColor: colors.boostActive,
-        paddingHorizontal: spacing.sm,
-        paddingVertical: spacing.xxs,
-        borderRadius: borderRadius.full,
+    promoIcon: {
+        fontSize: 32,
     },
-    boostBadgeText: {
+
+    // Featured
+    featuredContainer: {
+        padding: spacing.lg,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+    },
+    liveGameRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: colors.bgSecondary,
+        padding: spacing.sm,
+        borderRadius: borderRadius.sm,
+        borderWidth: 1,
+        borderColor: colors.border,
+    },
+    liveIndicator: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+    redDot: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+        backgroundColor: colors.error,
+    },
+    liveText: {
+        fontSize: 10,
+        fontWeight: '700',
+        color: colors.error,
+    },
+    liveGameText: {
         ...typography.bodyBold,
+        fontSize: 13,
+    },
+    liveGameTime: {
+        ...typography.mono,
+        fontSize: 12,
+        color: colors.textSecondary,
+    },
+
+    // Sections
+    section: {
+        marginTop: spacing.xl,
+        paddingHorizontal: spacing.lg,
+    },
+    sectionHeaderRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: spacing.md,
+    },
+    sectionTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: colors.textPrimary,
+        marginBottom: spacing.md,
+    },
+    sectionAction: {
+        fontSize: 12,
+        color: colors.primary,
+        fontWeight: '600',
+    },
+
+    // Market Rows (Polymarket Style)
+    marketRow: {
+        backgroundColor: colors.bgSecondary,
+        borderRadius: borderRadius.md, // sharper
+        padding: spacing.md,
+        marginBottom: spacing.sm,
+        borderWidth: 1,
+        borderColor: colors.border,
+    },
+    marketInfo: {
+        marginBottom: spacing.md,
+    },
+    marketHeaderRow: {
+        flexDirection: 'column',
+        gap: 4,
+    },
+    stadiumTag: {
+        fontSize: 10,
+        fontWeight: '700',
+        color: colors.gold,
+        marginBottom: 2,
+    },
+    marketTitle: {
+        fontSize: 16,
+        fontWeight: '500',
+        color: colors.textPrimary,
+        lineHeight: 22,
+    },
+    outcomesContainer: {
+        flexDirection: 'column',
+        gap: 6,
+    },
+    outcomeButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        height: 36,
+        borderRadius: borderRadius.sm,
+        paddingHorizontal: spacing.md,
+        position: 'relative',
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: colors.border, // Very subtle border
+    },
+    outcomeName: {
+        fontSize: 13,
+        fontWeight: '600',
+        position: 'relative',
+        zIndex: 1,
+    },
+    outcomeProb: {
+        fontSize: 13,
+        fontWeight: '600',
+        position: 'relative',
+        zIndex: 1,
+    },
+
+    // Stadium
+    stadiumWrapper: {
+        height: 200,
+        borderRadius: borderRadius.lg, // slightly rounder for the view
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: colors.border,
+        position: 'relative',
+    },
+    chatOverlayButton: {
+        position: 'absolute',
+        bottom: spacing.md,
+        right: spacing.md,
+        backgroundColor: colors.bgElevated,
+        paddingHorizontal: spacing.md,
+        paddingVertical: 6,
+        borderRadius: borderRadius.full,
+        borderWidth: 1,
+        borderColor: colors.border,
+    },
+    chatButtonText: {
+        fontSize: 12,
+        fontWeight: '600',
         color: colors.textPrimary,
     },
-    section: {
-        paddingHorizontal: spacing.lg,
-        marginTop: spacing.lg,
+
+    // Activity Feed (Dense)
+    feedItem: {
+        flexDirection: 'row',
+        paddingVertical: spacing.sm,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
     },
+    feedAvatar: {
+        fontSize: 18,
+        marginRight: spacing.md,
+    },
+    feedContent: {
+        flex: 1,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+    },
+    feedText: {
+        fontSize: 13,
+        color: colors.textSecondary,
+        flex: 1,
+        marginRight: spacing.sm,
+        lineHeight: 18,
+    },
+    feedName: {
+        color: colors.textPrimary,
+        fontWeight: '600',
+    },
+    feedTime: {
+        fontSize: 11,
+        color: colors.textTertiary,
+    },
+
+    // Toast
     toast: {
         position: 'absolute',
-        top: 100,
+        top: 60,
         left: spacing.lg,
         right: spacing.lg,
-        backgroundColor: colors.bgCard,
-        borderRadius: borderRadius.lg,
+        backgroundColor: colors.bgElevated,
+        borderRadius: borderRadius.md,
         padding: spacing.md,
         flexDirection: 'row',
         alignItems: 'center',
         borderWidth: 1,
         borderColor: colors.primary,
         zIndex: 100,
-        ...shadows.lg,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
     },
     toastAvatar: {
-        fontSize: 24,
-        marginRight: spacing.sm,
+        fontSize: 20,
+        marginRight: spacing.md,
     },
     toastContent: {
         flex: 1,
     },
     toastName: {
-        ...typography.bodyBold,
+        fontSize: 14,
+        fontWeight: '600',
         color: colors.textPrimary,
     },
     toastText: {
-        ...typography.caption,
+        fontSize: 12,
         color: colors.textSecondary,
-    },
-    activityFeed: {
-        paddingRight: spacing.lg,
-        gap: spacing.sm,
-    },
-    activityCard: {
-        width: 100,
-        backgroundColor: colors.bgCard,
-        borderRadius: borderRadius.lg,
-        padding: spacing.sm,
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: colors.cardBorder,
-    },
-    activityAvatar: {
-        fontSize: 24,
-        marginBottom: spacing.xxs,
-    },
-    activityName: {
-        ...typography.small,
-        color: colors.textPrimary,
-        fontWeight: '600',
-    },
-    activityText: {
-        ...typography.micro,
-        color: colors.textMuted,
-        textAlign: 'center',
-        marginTop: 2,
-    },
-    gameCard: {
-        marginBottom: spacing.sm,
-    },
-    gameHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: spacing.sm,
-    },
-    gameTime: {
-        ...typography.caption,
-        color: colors.textSecondary,
-    },
-    gameTeams: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: spacing.lg,
-    },
-    team: {
-        alignItems: 'center',
-        flex: 1,
-    },
-    teamLogo: {
-        fontSize: 32,
-        marginBottom: spacing.xs,
-    },
-    teamName: {
-        ...typography.bodyBold,
-        color: colors.textPrimary,
-    },
-    teamScore: {
-        ...typography.stat,
-        color: colors.textPrimary,
-    },
-    vs: {
-        ...typography.body,
-        color: colors.textMuted,
-    },
-    marketCard: {
-        marginBottom: spacing.sm,
-    },
-    marketHeader: {
-        flexDirection: 'row',
-        gap: spacing.xs,
-        marginBottom: spacing.sm,
-    },
-    marketTitle: {
-        ...typography.bodyBold,
-        color: colors.textPrimary,
-        marginBottom: spacing.sm,
-    },
-    marketOptions: {
-        flexDirection: 'row',
-        gap: spacing.sm,
-    },
-    marketOption: {
-        flex: 1,
-        backgroundColor: colors.bgElevated,
-        padding: spacing.sm,
-        borderRadius: borderRadius.md,
-        alignItems: 'center',
-    },
-    optionLabel: {
-        ...typography.small,
-        color: colors.textSecondary,
-        marginBottom: 2,
-    },
-    optionOdds: {
-        ...typography.bodyBold,
-    },
-    oddsGreen: {
-        color: colors.success,
-    },
-    oddsRed: {
-        color: colors.secondary,
-    },
-    statsRow: {
-        flexDirection: 'row',
-        gap: spacing.sm,
-    },
-    statBox: {
-        flex: 1,
-        backgroundColor: colors.bgCard,
-        borderRadius: borderRadius.lg,
-        padding: spacing.md,
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: colors.cardBorder,
-    },
-    statValue: {
-        ...typography.h2,
-        color: colors.textPrimary,
-    },
-    statLabel: {
-        ...typography.small,
-        color: colors.textMuted,
-    },
-    chatButton: {
-        backgroundColor: colors.primary,
-        paddingVertical: spacing.md,
-        paddingHorizontal: spacing.lg,
-        borderRadius: borderRadius.lg,
-        marginTop: spacing.md,
-        alignItems: 'center',
-    },
-    chatButtonText: {
-        ...typography.bodyBold,
-        color: colors.textPrimary,
     },
 });

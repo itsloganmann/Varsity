@@ -39,17 +39,11 @@ export const FriendProfileScreen: React.FC<Props> = ({ navigation, route }) => {
     const friend = route?.params?.friend ?? DEFAULT_FRIEND;
 
     const handleChallenge = () => {
-        Alert.alert(
-            'Challenge Sent! 🎯',
-            `You challenged ${friend.name} to a prediction battle!`
-        );
+        navigation.navigate('SpeedChallenge', { friend });
     };
 
     const handleMessage = () => {
-        Alert.alert(
-            'Message Sent! 💬',
-            `Demo: Messages would open a chat with ${friend.name}`
-        );
+        navigation.navigate('DirectMessage', { friend });
     };
 
     // Mock stats for the friend

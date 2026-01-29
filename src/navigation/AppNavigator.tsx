@@ -28,9 +28,12 @@ import {
     FriendsScreen,
     FriendProfileScreen,
     ChatroomScreen,
+    DirectMessageScreen,
     EditProfileScreen,
     TermsOfServiceScreen,
     PrivacyPolicyScreen,
+    SpeedChallengeScreen,
+    PromotionalChallengeScreen,
 } from '../screens/main';
 
 const Stack = createStackNavigator();
@@ -120,6 +123,9 @@ const MainStackNavigator = () => (
         <MainStack.Screen name="Friends" component={FriendsScreen} />
         <MainStack.Screen name="FriendProfile" component={FriendProfileScreen} />
         <MainStack.Screen name="Chatroom" component={ChatroomScreen} />
+        <MainStack.Screen name="DirectMessage" component={DirectMessageScreen} />
+        <MainStack.Screen name="SpeedChallenge" component={SpeedChallengeScreen} />
+        <MainStack.Screen name="PromotionalChallenge" component={PromotionalChallengeScreen} />
     </MainStack.Navigator>
 );
 

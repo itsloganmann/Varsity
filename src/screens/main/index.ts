@@ -11,3 +11,6 @@ export { ChatroomScreen } from './ChatroomScreen';
 export { EditProfileScreen } from './EditProfileScreen';
 export { TermsOfServiceScreen } from './TermsOfServiceScreen';
 export { PrivacyPolicyScreen } from './PrivacyPolicyScreen';
+export { DirectMessageScreen } from './DirectMessageScreen';
+export { SpeedChallengeScreen } from './SpeedChallengeScreen';
+export { PromotionalChallengeScreen } from './PromotionalChallengeScreen';

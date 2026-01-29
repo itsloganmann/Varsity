@@ -295,6 +295,40 @@ export const mockRewards: Reward[] = [
         available: true,
         stock: 150,
     },
+    // New Phase 3 Rewards
+    {
+        id: 'reward-9',
+        title: 'GOAT $50 Gift Card',
+        description: 'Get fresh kicks. Valid for any purchase on GOAT.',
+        imageUrl: '👟',
+        coinCost: 10000,
+        category: 'sponsor',
+        tier: 2,
+        available: true,
+        stock: 20,
+    },
+    {
+        id: 'reward-10',
+        title: 'StockX $100 Gift Card',
+        description: 'Bid on anything from sneakers to electronics.',
+        imageUrl: '🟢',
+        coinCost: 18000,
+        category: 'sponsor',
+        tier: 1,
+        available: true,
+        stock: 10,
+    },
+    {
+        id: 'reward-11',
+        title: 'Lululemon $50 Gift Card',
+        description: 'Upgrade your activewear. Valid in-store and online.',
+        imageUrl: '🧘',
+        coinCost: 10000,
+        category: 'sponsor',
+        tier: 2,
+        available: true,
+        stock: 30,
+    },
 ];
 
 export const mockTickets: Ticket[] = [

@@ -25,8 +25,8 @@ interface Props {
 }
 
 export const PredictionsScreen: React.FC<Props> = ({ navigation, route }) => {
-    const { user, updateCoins, incrementPredictions } = useAuthStore();
-    const { markets, games, placePrediction, userPredictions, loadMarkets } = usePredictionStore();
+    const { user, updateCoins, incrementPredictions, simulateWin } = useAuthStore();
+    const { markets, games, placePrediction, userPredictions, loadMarkets, resolvePredictionAsWin } = usePredictionStore();
     const { isAtStadium, boostMultiplier } = useLocationStore();
 
     const [selectedTab, setSelectedTab] = useState<'open' | 'my'>('open');
@@ -41,16 +41,18 @@ export const PredictionsScreen: React.FC<Props> = ({ navigation, route }) => {
 
     const openMarkets = markets.filter(m => m.status === 'open');
 
-    // Demo: Simulate winning a prediction
-    const handleSimulateWin = () => {
-        const winAmount = Math.floor(Math.random() * 300) + 100;
-        const boostedAmount = isAtStadium ? Math.round(winAmount * boostMultiplier) : winAmount;
-        updateCoins((user?.coins || 0) + boostedAmount);
-        Alert.alert(
-            '🎉 You Won!',
-            `Your prediction was correct!\n\n🪙 +${boostedAmount} coins${isAtStadium ? ` (${boostMultiplier}x Stadium Boost!)` : ''}`,
-            [{ text: 'Awesome!' }]
-        );
+    // Handle simulating a win for a specific prediction
+    const handleSimulateResolution = (prediction: Prediction) => {
+        const winAmount = resolvePredictionAsWin(prediction.id);
+
+        if (winAmount > 0) {
+            simulateWin(winAmount); // Update auth store stats and coins
+            Alert.alert(
+                '🎉 Prediction Won!',
+                `You won ${winAmount} coins!\n\nStreak increased! 🔥`,
+                [{ text: 'Awesome!' }]
+            );
+        }
     };
 
     const calculatePotentialWin = () => {
@@ -114,28 +116,29 @@ export const PredictionsScreen: React.FC<Props> = ({ navigation, route }) => {
         const isLocked = market.isStadiumExclusive && !isAtStadium;
 
         return (
-            <Card key={market.id} style={isLocked ? [styles.marketCard, styles.lockedCard] : styles.marketCard}>
+            <Card key={market.id} style={styles.marketCard}>
                 <View style={styles.marketHeader}>
-                    {market.type === 'flash_prop' && <Badge text="⚡ FLASH" variant="warning" />}
-                    {market.isStadiumExclusive && <Badge text="🏟️ Stadium Only" variant="boost" />}
-                    {effectiveBoost > 1 && <Badge text={`${effectiveBoost}x Boost`} variant="success" />}
+                    <Text style={styles.gameInfo}>
+                        {game?.homeTeam.shortName} vs {game?.awayTeam.shortName}
+                    </Text>
+                    {market.isStadiumExclusive && (
+                        <Badge text="🏟️ Stadium Exclusive" variant="boost" />
+                    )}
+                    {effectiveBoost > 1 && (
+                        <Badge text={`${effectiveBoost}x Boost`} variant="warning" />
+                    )}
                 </View>
 
-                {game && (
-                    <Text style={styles.gameInfo}>
-                        {game.awayTeam.shortName} @ {game.homeTeam.shortName}
-                    </Text>
-                )}
                 <Text style={styles.marketTitle}>{market.title}</Text>
-                {market.description && (
-                    <Text style={styles.marketDescription}>{market.description}</Text>
-                )}
 
-                <View style={styles.optionsContainer}>
-                    {market.options.map(option => (
+                <View style={styles.marketOptions}>
+                    {market.options.map((option) => (
                         <TouchableOpacity
                             key={option.id}
-                            style={[styles.optionButton, isLocked && styles.optionLocked]}
+                            style={[
+                                styles.marketOption,
+                                isLocked && { opacity: 0.5 }
+                            ]}
                             onPress={() => !isLocked && handleSelectOption(market, option)}
                             disabled={isLocked}
                         >
@@ -176,6 +179,23 @@ export const PredictionsScreen: React.FC<Props> = ({ navigation, route }) => {
                     → 🪙 {prediction.potentialWin + prediction.coinsWagered} to win
                 </Text>
             </View>
+
+            {/* Demo: Simulate Win Button per prediction */}
+            {prediction.status === 'pending' && (
+                <TouchableOpacity
+                    style={styles.simulateCardButton}
+                    onPress={() => handleSimulateResolution(prediction)}
+                >
+                    <LinearGradient
+                        colors={gradients.boost}
+                        style={styles.simulateCardGradient}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                    >
+                        <Text style={styles.simulateCardText}>🎲 Simulate Win</Text>
+                    </LinearGradient>
+                </TouchableOpacity>
+            )}
         </Card>
     );
 
@@ -205,24 +225,6 @@ export const PredictionsScreen: React.FC<Props> = ({ navigation, route }) => {
                         <Text style={[styles.tabText, selectedTab === 'my' && styles.tabTextActive]}>
                             My Predictions ({userPredictions.length})
                         </Text>
-                    </TouchableOpacity>
-                </View>
-
-                {/* Demo: Simulate Win Button */}
-                <View style={styles.simulateSection}>
-                    <TouchableOpacity
-                        style={styles.simulateButton}
-                        onPress={handleSimulateWin}
-                    >
-                        <LinearGradient
-                            colors={gradients.boost}
-                            style={styles.simulateGradient}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                        >
-                            <Text style={styles.simulateText}>🎲 Simulate Win</Text>
-                            <Text style={styles.simulateSubtext}>Demo: instant coins!</Text>
-                        </LinearGradient>
                     </TouchableOpacity>
                 </View>
 
@@ -592,9 +594,6 @@ const styles = StyleSheet.create({
     },
     potentialWin: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: spacing.lg,
         paddingVertical: spacing.sm,
     },
     potentialLabel: {
@@ -622,5 +621,34 @@ const styles = StyleSheet.create({
         ...typography.small,
         color: colors.textSecondary,
         marginTop: 2,
+    },
+    marketOptions: {
+        flexDirection: 'row',
+        gap: spacing.sm,
+    },
+    marketOption: {
+        flex: 1,
+        backgroundColor: colors.bgElevated,
+        padding: spacing.sm,
+        borderRadius: borderRadius.md,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: colors.cardBorder,
+    },
+    simulateCardButton: {
+        marginTop: spacing.md,
+        borderRadius: borderRadius.md,
+        overflow: 'hidden',
+    },
+    simulateCardGradient: {
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.md,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    simulateCardText: {
+        ...typography.bodyBold,
+        color: colors.textPrimary,
+        fontSize: 14,
     },
 });
