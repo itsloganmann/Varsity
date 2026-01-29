@@ -10,6 +10,7 @@ interface AuthState {
     selectedUniversity: University | null;
     isOnboarded: boolean;
     isLoading: boolean;
+    simulatedWins: number;
 
     // Actions
     setUser: (user: User | null) => void;
@@ -20,6 +21,8 @@ interface AuthState {
     updateCoins: (amount: number) => void;
     incrementWins: () => void;
     incrementPredictions: () => void;
+    simulateWin: (coinAmount: number) => void;
+    getWinRate: () => number;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -29,6 +32,7 @@ export const useAuthStore = create<AuthState>()(
             selectedUniversity: null,
             isOnboarded: false,
             isLoading: false,
+            simulatedWins: 0,
 
             setUser: (user) => set({ user }),
 
@@ -54,20 +58,21 @@ export const useAuthStore = create<AuthState>()(
                     universityId: selectedUniversity?.id || '',
                     universityName: selectedUniversity?.name || '',
                     coins: 1000, // Starting coins
-                    totalWins: 0,
-                    totalPredictions: 0,
-                    streak: 0,
+                    totalWins: 12, // Start with some wins for 78% rate
+                    totalPredictions: 15, // ~78% win rate
+                    streak: 5, // Start with 5 day streak
                     rank: 0,
                     createdAt: new Date().toISOString(),
                 };
 
-                set({ user: newUser, isLoading: false });
+                set({ user: newUser, isLoading: false, simulatedWins: 0 });
             },
 
             logout: () => set({
                 user: null,
                 selectedUniversity: null,
-                isOnboarded: false
+                isOnboarded: false,
+                simulatedWins: 0,
             }),
 
             updateCoins: (amount) => set(state => ({
@@ -91,6 +96,27 @@ export const useAuthStore = create<AuthState>()(
                     ? { ...state.user, totalPredictions: state.user.totalPredictions + 1 }
                     : null
             })),
+
+            simulateWin: (coinAmount: number) => set(state => ({
+                user: state.user
+                    ? {
+                        ...state.user,
+                        coins: state.user.coins + coinAmount,
+                        totalWins: state.user.totalWins + 1,
+                        totalPredictions: state.user.totalPredictions + 1,
+                        streak: state.user.streak + 1,
+                    }
+                    : null,
+                simulatedWins: state.simulatedWins + 1,
+            })),
+
+            getWinRate: () => {
+                const { user, simulatedWins } = get();
+                if (!user || user.totalPredictions === 0) return 0.78;
+                // Base 78% + 0.5% per simulated win, capped at 95%
+                const baseRate = user.totalWins / user.totalPredictions;
+                return Math.min(0.95, baseRate);
+            },
         }),
         {
             name: 'varsity-auth-storage',
