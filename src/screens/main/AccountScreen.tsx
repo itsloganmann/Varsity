@@ -93,7 +93,7 @@ export const AccountScreen: React.FC<Props> = ({ navigation }) => {
                         {/* Profile Hero */}
                         <View style={styles.heroSection}>
                             <LinearGradient
-                                colors={gradients.premium}
+                                colors={gradients.boost}
                                 style={styles.heroBg}
                             />
 
@@ -180,7 +180,7 @@ export const AccountScreen: React.FC<Props> = ({ navigation }) => {
 
                             {/* Friend Avatars */}
                             <View style={styles.friendAvatars}>
-                                {friends.slice(0, 5).map((friend, index) => (
+                                {(friends || []).slice(0, 5).map((friend, index) => (
                                     <View
                                         key={friend.id}
                                         style={[
@@ -318,9 +318,10 @@ const styles = StyleSheet.create({
         marginBottom: spacing.xs,
     },
     coinAmount: {
-        ...typography.display,
-        color: colors.coinGold,
-        ...shadows.glowOrange,
+        fontSize: 32,
+        fontWeight: '700',
+        color: 'white',
+        letterSpacing: -1,
     },
     coinLabel: {
         ...typography.caption,
@@ -332,6 +333,8 @@ const styles = StyleSheet.create({
     },
     statsRow: {
         flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         backgroundColor: colors.bgCard,
         borderRadius: borderRadius.xl,
         padding: spacing.lg,
@@ -339,37 +342,41 @@ const styles = StyleSheet.create({
         borderColor: colors.cardBorder,
     },
     statItem: {
-        flex: 1,
         alignItems: 'center',
+        flex: 1,
     },
     statValue: {
-        ...typography.statSmall,
+        ...typography.h2,
         color: colors.textPrimary,
+        fontWeight: '700',
     },
     statLabel: {
-        ...typography.small,
-        color: colors.textMuted,
-        marginTop: spacing.xxs,
+        ...typography.caption,
+        color: colors.textSecondary,
+        marginTop: 4,
     },
     statDivider: {
         width: 1,
-        backgroundColor: colors.divider,
-        marginHorizontal: spacing.md,
+        height: 30,
+        backgroundColor: colors.border,
     },
     section: {
-        paddingHorizontal: spacing.lg,
         marginTop: spacing.xl,
+        paddingHorizontal: spacing.lg,
     },
     sectionTitle: {
-        ...typography.h3,
+        fontSize: 18,
+        fontWeight: '600',
         color: colors.textPrimary,
         marginBottom: spacing.md,
     },
+    // Streak
     streakCard: {
-        borderRadius: borderRadius.xl,
+        borderRadius: borderRadius.lg,
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: 'rgba(255, 107, 53, 0.3)',
+        borderColor: colors.gold,
+        position: 'relative',
     },
     streakBg: {
         ...StyleSheet.absoluteFillObject,
@@ -377,30 +384,32 @@ const styles = StyleSheet.create({
     streakContent: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: spacing.lg,
+        padding: spacing.md,
+        gap: spacing.md,
     },
     streakEmoji: {
-        fontSize: 40,
-        marginRight: spacing.md,
+        fontSize: 32,
     },
     streakInfo: {
         flex: 1,
     },
     streakValue: {
-        ...typography.h3,
-        color: colors.boostActive,
+        fontSize: 16,
+        fontWeight: '700',
+        color: colors.textPrimary,
     },
     streakLabel: {
         ...typography.caption,
         color: colors.textSecondary,
     },
+    // Friends
     friendsCard: {
         flexDirection: 'row',
-        backgroundColor: colors.bgCard,
-        borderRadius: borderRadius.xl,
-        padding: spacing.lg,
+        backgroundColor: colors.bgSecondary,
+        borderRadius: borderRadius.lg,
+        padding: spacing.md,
         borderWidth: 1,
-        borderColor: colors.cardBorder,
+        borderColor: colors.border,
         marginBottom: spacing.md,
     },
     friendsStat: {
@@ -408,42 +417,46 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     friendsCount: {
-        ...typography.statSmall,
+        fontSize: 20,
+        fontWeight: '700',
         color: colors.textPrimary,
     },
     friendsLabel: {
-        ...typography.small,
-        color: colors.textMuted,
+        ...typography.caption,
+        color: colors.textSecondary,
     },
     friendsDivider: {
         width: 1,
-        backgroundColor: colors.divider,
-        marginHorizontal: spacing.md,
+        backgroundColor: colors.border,
     },
     friendAvatars: {
         flexDirection: 'row',
-        alignItems: 'center',
+        marginLeft: 12,
+        height: 40,
     },
     friendAvatar: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
+        width: 36,
+        height: 36,
+        borderRadius: 18,
         backgroundColor: colors.bgElevated,
-        alignItems: 'center',
-        justifyContent: 'center',
         borderWidth: 2,
         borderColor: colors.bgPrimary,
+        alignItems: 'center',
+        justifyContent: 'center',
+        ...shadows.sm,
     },
     friendAtStadium: {
-        borderColor: colors.boostActive,
+        borderColor: colors.gold,
     },
     friendAvatarText: {
-        fontSize: 20,
+        fontSize: 16,
     },
     friendAvatarMore: {
-        ...typography.small,
+        fontSize: 12,
+        fontWeight: '600',
         color: colors.textSecondary,
     },
+    // Achievements
     achievementsGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
@@ -451,32 +464,36 @@ const styles = StyleSheet.create({
     },
     achievementItem: {
         width: '31%',
-        backgroundColor: colors.bgCard,
-        borderRadius: borderRadius.lg,
-        padding: spacing.md,
+        aspectRatio: 1,
+        backgroundColor: colors.bgSecondary,
+        borderRadius: borderRadius.md,
         alignItems: 'center',
+        justifyContent: 'center',
+        padding: spacing.xs,
         borderWidth: 1,
-        borderColor: colors.cardBorder,
+        borderColor: colors.border,
     },
     achievementLocked: {
-        opacity: 0.4,
+        opacity: 0.3,
+        backgroundColor: colors.bgPrimary,
+        borderStyle: 'dashed',
     },
     achievementEmoji: {
-        fontSize: 28,
+        fontSize: 24,
         marginBottom: spacing.xs,
     },
     achievementLabel: {
         ...typography.micro,
-        color: colors.textSecondary,
         textAlign: 'center',
+        color: colors.textSecondary,
     },
     signOutButton: {
-        backgroundColor: 'rgba(255, 71, 87, 0.15)',
+        backgroundColor: colors.bgSecondary,
+        borderWidth: 1,
+        borderColor: colors.error,
         borderRadius: borderRadius.lg,
         padding: spacing.md,
         alignItems: 'center',
-        borderWidth: 1,
-        borderColor: 'rgba(255, 71, 87, 0.3)',
     },
     signOutText: {
         ...typography.bodyBold,

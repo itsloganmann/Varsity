@@ -151,7 +151,19 @@ export const RewardsScreen: React.FC<Props> = ({ navigation }) => {
 
                 {/* Redeem History Link */}
                 {redemptions.length > 0 && (
-                    <TouchableOpacity style={styles.historyLink}>
+                    <TouchableOpacity
+                        style={styles.historyLink}
+                        onPress={() => {
+                            const historyText = redemptions.map(r => {
+                                const reward = rewards.find(rew => rew.id === r.rewardId);
+                                const title = reward ? reward.title : 'Unknown Reward';
+                                const cost = reward ? reward.coinCost : '???';
+                                return `${title}\n${new Date(r.redeemedAt).toLocaleDateString()} • -${cost} coins\nCode: ${r.code}`;
+                            }).join('\n\n');
+
+                            Alert.alert('Redemption History', historyText);
+                        }}
+                    >
                         <Text style={styles.historyText}>
                             📜 View Redemption History ({redemptions.length})
                         </Text>
@@ -325,7 +337,7 @@ const styles = StyleSheet.create({
         fontSize: 10,
     },
     rewardStock: {
-        ...typography.small,
+        ...typography.caption,
         color: colors.warning,
     },
     rewardTitle: {
@@ -340,7 +352,7 @@ const styles = StyleSheet.create({
         gap: spacing.xs,
     },
     needMore: {
-        ...typography.small,
+        ...typography.caption,
         color: colors.error,
     },
     historyLink: {

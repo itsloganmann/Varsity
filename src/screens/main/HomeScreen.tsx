@@ -113,7 +113,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
                 {/* Polymarket-style Header */}
                 <View style={styles.header}>
-                    <Text style={styles.headerTitle}>Markets</Text>
+                    <Text style={styles.headerTitle}>Varsity</Text>
                     <View style={styles.headerRight}>
                         <TouchableOpacity
                             style={[styles.locationBadge, isAtStadium && styles.locationBadgeActive]}
@@ -121,7 +121,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                         >
                             <Text style={styles.locationIcon}>{isAtStadium ? '🔥' : '🏟️'}</Text>
                             <Text style={styles.locationText}>
-                                {isAtStadium ? `${boostMultiplier}x Boost` : 'Simulate'}
+                                {isAtStadium ? `${boostMultiplier}x Boost` : 'Go to the Game!'}
                             </Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.coinContainer}>
@@ -169,6 +169,29 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                         </View>
                     )}
 
+                    {/* Interactive Stadium Preview */}
+                    <View style={styles.section}>
+                        <View style={styles.sectionHeaderRow}>
+                            <Text style={styles.sectionTitle}>Who's at the Game?</Text>
+                            <Text style={styles.sectionAction}>{friendsAtStadium.length} Friends Here</Text>
+                        </View>
+                        <View style={styles.stadiumWrapper}>
+                            <StadiumView
+                                friends={friends}
+                                isUserAtStadium={isAtStadium}
+                                userPosition={isAtStadium ? { x: 50, y: 55 } : undefined}
+                            />
+                            {isAtStadium && (
+                                <TouchableOpacity
+                                    style={styles.chatOverlayButton}
+                                    onPress={() => navigation.navigate('Chatroom')}
+                                >
+                                    <Text style={styles.chatButtonText}>Join Chat</Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    </View>
+
                     {/* Trending Markets - List View */}
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Trending</Text>
@@ -213,28 +236,6 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                         ))}
                     </View>
 
-                    {/* Interactive Stadium Preview (Smaller, integrated) */}
-                    <View style={styles.section}>
-                        <View style={styles.sectionHeaderRow}>
-                            <Text style={styles.sectionTitle}>Stadium Activity</Text>
-                            <Text style={styles.sectionAction}>{friendsAtStadium.length} Friends Here</Text>
-                        </View>
-                        <View style={styles.stadiumWrapper}>
-                            <StadiumView
-                                friends={friends}
-                                isUserAtStadium={isAtStadium}
-                                userPosition={isAtStadium ? { x: 50, y: 55 } : undefined}
-                            />
-                            {isAtStadium && (
-                                <TouchableOpacity
-                                    style={styles.chatOverlayButton}
-                                    onPress={() => navigation.navigate('Chatroom')}
-                                >
-                                    <Text style={styles.chatButtonText}>Join Chat</Text>
-                                </TouchableOpacity>
-                            )}
-                        </View>
-                    </View>
 
                     {/* Recent Activity (Text based, dense) */}
                     {messages.length > 0 && (

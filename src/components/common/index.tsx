@@ -98,7 +98,7 @@ interface CardProps {
 export const Card: React.FC<CardProps> = ({ children, style, gradient = false, onPress }) => {
     const content = gradient ? (
         <LinearGradient
-            colors={gradients.card}
+            colors={gradients.dark}
             style={[styles.card, style]}
         >
             {children}
@@ -186,9 +186,9 @@ export const Avatar: React.FC<AvatarProps> = ({ name, imageUrl, size = 40, rank 
         .slice(0, 2);
 
     const rankColors = {
-        1: colors.rankGold,
-        2: colors.rankSilver,
-        3: colors.rankBronze,
+        1: colors.gold,
+        2: colors.silver,
+        3: colors.bronze,
     };
 
     return (
@@ -268,12 +268,12 @@ const styles = StyleSheet.create({
         gap: spacing.xs,
     },
     coinIcon: {
-        textShadowColor: colors.coinGlow,
+        textShadowColor: colors.gold,
         textShadowOffset: { width: 0, height: 0 },
         textShadowRadius: 8,
     },
     coinAmount: {
-        color: colors.coinGold,
+        color: 'white',
         fontWeight: '700',
     },
     coinLabel: {

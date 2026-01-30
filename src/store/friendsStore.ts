@@ -232,13 +232,27 @@ export const useFriendsStore = create<FriendsState>()((set, get) => ({
             const atStadium = friends.filter(f => f.isAtStadium);
 
             if (atStadium.length > 0) {
-                // Random friend moves
+                // Random friend moves to a random section (Stands only)
                 const movingFriend = atStadium[Math.floor(Math.random() * atStadium.length)];
-                const currentPos = movingFriend.stadiumPosition || { x: 50, y: 50 };
+
+                // Define stand definitions (simplified from StadiumView)
+                const sections = [
+                    { xMin: 25, xMax: 75, yMin: 2, yMax: 12 },   // North
+                    { xMin: 25, xMax: 75, yMin: 88, yMax: 98 },  // South
+                    { xMin: 2, xMax: 12, yMin: 15, yMax: 85 },   // West
+                    { xMin: 88, xMax: 98, yMin: 15, yMax: 85 },  // East
+                    { xMin: 2, xMax: 20, yMin: 2, yMax: 12 },    // NW Corner
+                    { xMin: 80, xMax: 98, yMin: 2, yMax: 12 },   // NE Corner
+                    { xMin: 2, xMax: 20, yMin: 88, yMax: 98 },   // SW Corner
+                    { xMin: 80, xMax: 98, yMin: 88, yMax: 98 },  // SE Corner
+                ];
+
+                const randomSection = sections[Math.floor(Math.random() * sections.length)];
                 const newPos = {
-                    x: Math.max(10, Math.min(90, currentPos.x + (Math.random() - 0.5) * 15)),
-                    y: Math.max(10, Math.min(90, currentPos.y + (Math.random() - 0.5) * 15)),
+                    x: randomSection.xMin + Math.random() * (randomSection.xMax - randomSection.xMin),
+                    y: randomSection.yMin + Math.random() * (randomSection.yMax - randomSection.yMin),
                 };
+
                 get().updateFriendPosition(movingFriend.id, newPos);
             }
 
@@ -249,7 +263,7 @@ export const useFriendsStore = create<FriendsState>()((set, get) => ({
                     { type: 'prediction' as const, content: `just predicted OSU -7! 🎯` },
                     { type: 'prediction' as const, content: `wagered 250 coins on Over 52.5 💰` },
                     { type: 'won' as const, content: `won their last prediction! +380 coins 🔥` },
-                    { type: 'arrived' as const, content: `just checked in at the stadium! 🏟️` },
+                    { type: 'arrived' as const, content: `found a seat in the stands! 🏟️` },
                 ];
                 const activity = activities[Math.floor(Math.random() * activities.length)];
                 addMessage({

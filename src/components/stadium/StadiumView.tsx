@@ -132,6 +132,9 @@ export const StadiumView: React.FC<StadiumViewProps> = ({
     const handlePinchStateChange = (event: PinchGestureHandlerStateChangeEvent) => {
         if (event.nativeEvent.oldState === State.ACTIVE) {
             lastScale.current *= event.nativeEvent.scale;
+            // Clamp scale
+            lastScale.current = Math.max(0.4, Math.min(lastScale.current, 3));
+
             scale.setOffset(lastScale.current);
             scale.setValue(1);
         }
