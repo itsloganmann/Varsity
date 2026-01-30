@@ -10,6 +10,7 @@ import {
     TextInput,
     Modal,
     Alert,
+    Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, spacing, borderRadius, typography, gradients } from '../../theme';
@@ -174,10 +175,17 @@ export const PredictionsScreen: React.FC<Props> = ({ navigation, route }) => {
             <Text style={styles.predictionMarket}>{prediction.market.title}</Text>
             <Text style={styles.predictionPick}>Your pick: {prediction.selectedOption.label}</Text>
             <View style={styles.predictionStats}>
-                <Text style={styles.predictionWager}>🪙 {prediction.coinsWagered} wagered</Text>
-                <Text style={styles.predictionPotential}>
-                    → 🪙 {prediction.potentialWin + prediction.coinsWagered} to win
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <Image source={require('../../../assets/silver-coin.png')} style={{ width: 14, height: 14 }} resizeMode="contain" />
+                    <Text style={styles.predictionWager}>{prediction.coinsWagered} wagered</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <Text style={[styles.predictionPotential, { marginRight: 0 }]}>→</Text>
+                    <Image source={require('../../../assets/silver-coin.png')} style={{ width: 14, height: 14 }} resizeMode="contain" />
+                    <Text style={styles.predictionPotential}>
+                        {prediction.potentialWin + prediction.coinsWagered} to win
+                    </Text>
+                </View>
             </View>
 
             {/* Demo: Simulate Win Button per prediction */}
@@ -296,7 +304,11 @@ export const PredictionsScreen: React.FC<Props> = ({ navigation, route }) => {
 
                                     <Text style={styles.inputLabel}>Wager Amount</Text>
                                     <View style={styles.wagerInputContainer}>
-                                        <Text style={styles.wagerIcon}>🪙</Text>
+                                        <Image
+                                            source={require('../../../assets/silver-coin.png')}
+                                            style={{ width: 20, height: 20, marginRight: 8 }}
+                                            resizeMode="contain"
+                                        />
                                         <TextInput
                                             style={styles.wagerInput}
                                             value={wagerAmount}
@@ -321,6 +333,7 @@ export const PredictionsScreen: React.FC<Props> = ({ navigation, route }) => {
 
                                     <View style={styles.potentialWin}>
                                         <Text style={styles.potentialLabel}>Potential Win:</Text>
+                                        <View style={{ width: spacing.md }} />
                                         <CoinBalance amount={calculatePotentialWin() + (parseInt(wagerAmount) || 0)} size="lg" />
                                     </View>
 
@@ -439,7 +452,9 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     optionOdds: {
-        ...typography.odds,
+        fontSize: 16,
+        fontWeight: '600',
+        fontFamily: 'System',
     },
     oddsPositive: {
         color: colors.success,

@@ -7,6 +7,7 @@ import {
     ScrollView,
     TouchableOpacity,
     Alert,
+    Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -175,10 +176,11 @@ export const FriendProfileScreen: React.FC<Props> = ({ navigation, route }) => {
                                             <Text style={styles.predictionGame}>{pred.game}</Text>
                                             <Text style={styles.predictionPick}>{pred.pick}</Text>
                                         </View>
-                                        <View style={styles.predictionResult}>
-                                            <Badge
-                                                text={pred.result.toUpperCase()}
-                                                variant={pred.result === 'won' ? 'success' : pred.result === 'lost' ? 'error' : 'warning'}
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                                            <Image
+                                                source={require('../../../assets/silver-coin.png')}
+                                                style={{ width: 14, height: 14 }}
+                                                resizeMode="contain"
                                             />
                                             <Text style={[
                                                 styles.predictionCoins,
@@ -196,7 +198,7 @@ export const FriendProfileScreen: React.FC<Props> = ({ navigation, route }) => {
                     </ScrollView>
                 </SafeAreaView>
             </LinearGradient>
-        </View>
+        </View >
     );
 };
 

@@ -10,6 +10,8 @@ import {
     Modal,
     TextInput,
     Alert,
+    Platform,
+    KeyboardAvoidingView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, spacing, borderRadius, typography } from '../../theme';
@@ -241,7 +243,10 @@ export const TicketsScreen: React.FC<Props> = ({ navigation }) => {
                     animationType="slide"
                     onRequestClose={() => setShowListModal(false)}
                 >
-                    <View style={styles.modalOverlay}>
+                    <KeyboardAvoidingView
+                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                        style={styles.modalOverlay}
+                    >
                         <View style={styles.modalContent}>
                             <View style={styles.modalHeader}>
                                 <Text style={styles.modalTitle}>List a Ticket</Text>
@@ -321,7 +326,7 @@ export const TicketsScreen: React.FC<Props> = ({ navigation }) => {
                                 size="lg"
                             />
                         </View>
-                    </View>
+                    </KeyboardAvoidingView>
                 </Modal>
 
                 {/* Buy Ticket Modal */}
@@ -470,7 +475,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     ticketLabel: {
-        ...typography.small,
+        ...typography.caption,
         color: colors.textMuted,
     },
     ticketValue: {
@@ -595,7 +600,6 @@ const styles = StyleSheet.create({
         backgroundColor: colors.bgCard,
         borderRadius: borderRadius.md,
         padding: spacing.md,
-        color: colors.textPrimary,
         ...typography.body,
     },
     confirmCard: {

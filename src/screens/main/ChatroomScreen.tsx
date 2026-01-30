@@ -8,6 +8,7 @@ import {
     TouchableOpacity,
     TextInput,
     KeyboardAvoidingView,
+    Modal,
     Platform,
     Animated,
 } from 'react-native';
@@ -52,6 +53,7 @@ export const ChatroomScreen: React.FC<Props> = ({ navigation }) => {
     const [inputText, setInputText] = useState('');
     const scrollRef = useRef<ScrollView>(null);
     const [activeUsers] = useState(Math.floor(Math.random() * 500) + 200);
+    const [showFansModal, setShowFansModal] = useState(false);
 
     // Simulate incoming messages
     useEffect(() => {
@@ -127,10 +129,51 @@ export const ChatroomScreen: React.FC<Props> = ({ navigation }) => {
                                 <Badge text="🔴 LIVE" variant="error" />
                             </View>
                             <Text style={styles.subtitle}>
-                                {stadiumName || 'Ohio Stadium'} • {activeUsers} fans online
+                                {stadiumName || 'Ohio Stadium'} • <Text onPress={() => setShowFansModal(true)} style={{ textDecorationLine: 'underline' }}>
+                                    {activeUsers} fans online
+                                </Text>
                             </Text>
                         </View>
                     </View>
+
+                    <Modal
+                        visible={showFansModal}
+                        transparent
+                        animationType="fade"
+                        onRequestClose={() => setShowFansModal(false)}
+                    >
+                        <View style={styles.modalOverlay}>
+                            <View style={styles.fansModalContent}>
+                                <View style={styles.modalHeader}>
+                                    <Text style={styles.modalTitle}>Active Fans ({friendsAtStadium} Friends)</Text>
+                                    <TouchableOpacity onPress={() => setShowFansModal(false)}>
+                                        <Text style={styles.modalClose}>✕</Text>
+                                    </TouchableOpacity>
+                                </View>
+                                <ScrollView contentContainerStyle={styles.fansList}>
+                                    {friends.filter(f => f.isAtStadium).map(friend => (
+                                        <View key={friend.id} style={styles.fanRow}>
+                                            <Text style={styles.fanAvatar}>{friend.avatar}</Text>
+                                            <View>
+                                                <Text style={styles.fanName}>{friend.name}</Text>
+                                                <Text style={styles.fanSection}>📍 {friend.stadiumSection || 'In Stadium'}</Text>
+                                            </View>
+                                            <Badge text="Online" variant="success" />
+                                        </View>
+                                    ))}
+                                    {Array.from({ length: 5 }).map((_, i) => (
+                                        <View key={`anon-${i}`} style={styles.fanRow}>
+                                            <Text style={styles.fanAvatar}>👤</Text>
+                                            <View>
+                                                <Text style={styles.fanName}>Fan #{Math.floor(Math.random() * 9000) + 1000}</Text>
+                                                <Text style={styles.fanSection}>📍 Section {Math.floor(Math.random() * 30)}C</Text>
+                                            </View>
+                                        </View>
+                                    ))}
+                                </ScrollView>
+                            </View>
+                        </View>
+                    </Modal>
 
                     {/* Stadium Indicator */}
                     {!isAtStadium && (
@@ -259,7 +302,7 @@ const styles = StyleSheet.create({
         borderRadius: borderRadius.md,
     },
     bannerText: {
-        ...typography.small,
+        ...typography.caption,
         color: colors.warning,
         textAlign: 'center',
     },
@@ -271,7 +314,7 @@ const styles = StyleSheet.create({
         borderRadius: borderRadius.md,
     },
     friendsBannerText: {
-        ...typography.small,
+        ...typography.caption,
         color: colors.primary,
         textAlign: 'center',
     },
@@ -309,7 +352,7 @@ const styles = StyleSheet.create({
         borderBottomRightRadius: 4,
     },
     messageSender: {
-        ...typography.small,
+        ...typography.caption,
         color: colors.primary,
         fontWeight: '600',
         marginBottom: 2,
@@ -351,6 +394,56 @@ const styles = StyleSheet.create({
     },
     sendText: {
         ...typography.bodyBold,
+        // color: colors.textPrimary, // Already in bodyBold
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: colors.overlay,
+        justifyContent: 'center',
+        padding: spacing.lg,
+    },
+    fansModalContent: {
+        backgroundColor: colors.bgSecondary,
+        borderRadius: borderRadius.lg,
+        height: '60%',
+        padding: spacing.md,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: spacing.md,
+        paddingBottom: spacing.sm,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.cardBorder,
+    },
+    modalTitle: {
+        ...typography.h3,
         color: colors.textPrimary,
+    },
+    modalClose: {
+        fontSize: 20,
+        color: colors.textMuted,
+    },
+    fansList: {
+        gap: spacing.md,
+    },
+    fanRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.md,
+    },
+    fanAvatar: {
+        fontSize: 24,
+        width: 40,
+        textAlign: 'center',
+    },
+    fanName: {
+        ...typography.bodyBold,
+        color: colors.textPrimary,
+    },
+    fanSection: {
+        ...typography.caption,
+        color: colors.textSecondary,
     },
 });

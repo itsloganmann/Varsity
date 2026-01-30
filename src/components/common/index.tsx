@@ -9,6 +9,7 @@ import {
     ViewStyle,
     TextStyle,
     StyleProp,
+    Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, spacing, borderRadius, typography, shadows, gradients } from '../../theme';
@@ -138,7 +139,11 @@ export const CoinBalance: React.FC<CoinBalanceProps> = ({
 
     return (
         <View style={styles.coinContainer}>
-            <Text style={[styles.coinIcon, { fontSize: sizes[size].icon }]}>🪙</Text>
+            <Image
+                source={require('../../../assets/silver-coin.png')}
+                style={{ width: sizes[size].icon, height: sizes[size].icon, borderRadius: sizes[size].icon / 2 }}
+                resizeMode="contain"
+            />
             <Text style={[styles.coinAmount, { fontSize: sizes[size].text }]}>
                 {amount.toLocaleString()}
             </Text>
@@ -266,11 +271,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.xs,
-    },
-    coinIcon: {
-        textShadowColor: colors.gold,
-        textShadowOffset: { width: 0, height: 0 },
-        textShadowRadius: 8,
     },
     coinAmount: {
         color: 'white',

@@ -14,3 +14,4 @@ export { PrivacyPolicyScreen } from './PrivacyPolicyScreen';
 export { DirectMessageScreen } from './DirectMessageScreen';
 export { SpeedChallengeScreen } from './SpeedChallengeScreen';
 export { PromotionalChallengeScreen } from './PromotionalChallengeScreen';
+export { RedemptionHistoryScreen } from './RedemptionHistoryScreen';

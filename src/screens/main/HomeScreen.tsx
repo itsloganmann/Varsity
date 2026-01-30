@@ -125,8 +125,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                             </Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.coinContainer}>
-                            <Text style={styles.coinText}>{user?.coins?.toLocaleString()}</Text>
-                            <Text style={styles.coinSymbol}>₵</Text>
+                            <CoinBalance amount={user?.coins || 0} size="sm" />
                         </TouchableOpacity>
                     </View>
                 </View>

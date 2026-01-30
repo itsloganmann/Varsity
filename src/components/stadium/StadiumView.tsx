@@ -103,9 +103,14 @@ export const StadiumView: React.FC<StadiumViewProps> = ({
     // Animation Values
     const translateX = useRef(new Animated.Value(0)).current;
     const translateY = useRef(new Animated.Value(0)).current;
-    const scale = useRef(new Animated.Value(0.6)).current; // Start zoomed out
+    const scale = useRef(new Animated.Value(1)).current; // Start at 1 (offset handles zoom)
 
-    const lastScale = useRef(0.6);
+    const lastScale = useRef(0.6); // Start partially zoomed out
+
+    // Init effect
+    React.useEffect(() => {
+        scale.setOffset(0.6 - 1); // Initial offset to make 1 + offset = 0.6
+    }, []);
     const lastOffset = useRef({ x: 0, y: 0 });
 
     const onPanEvent = Animated.event(
@@ -131,12 +136,14 @@ export const StadiumView: React.FC<StadiumViewProps> = ({
 
     const handlePinchStateChange = (event: PinchGestureHandlerStateChangeEvent) => {
         if (event.nativeEvent.oldState === State.ACTIVE) {
+            // Accumulate the scale
             lastScale.current *= event.nativeEvent.scale;
-            // Clamp scale
+            // Clamp total scale
             lastScale.current = Math.max(0.4, Math.min(lastScale.current, 3));
 
-            scale.setOffset(lastScale.current);
+            // Reset the gesture scale to 1, but update the base offset
             scale.setValue(1);
+            scale.setOffset(lastScale.current - 1); // Trick: offset + value(1) = lastScale
         }
     };
 

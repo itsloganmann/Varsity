@@ -34,6 +34,7 @@ import {
     PrivacyPolicyScreen,
     SpeedChallengeScreen,
     PromotionalChallengeScreen,
+    RedemptionHistoryScreen,
 } from '../screens/main';
 
 const Stack = createStackNavigator();
@@ -126,6 +127,7 @@ const MainStackNavigator = () => (
         <MainStack.Screen name="DirectMessage" component={DirectMessageScreen} />
         <MainStack.Screen name="SpeedChallenge" component={SpeedChallengeScreen} />
         <MainStack.Screen name="PromotionalChallenge" component={PromotionalChallengeScreen} />
+        <MainStack.Screen name="RedemptionHistory" component={RedemptionHistoryScreen} />
     </MainStack.Navigator>
 );
 

@@ -8,6 +8,7 @@ import {
     SafeAreaView,
     TouchableOpacity,
     ScrollView,
+    Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, spacing, borderRadius, typography } from '../../theme';
@@ -100,9 +101,16 @@ export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                                 <Text style={styles.previewName}>
                                     {displayName || 'Your Name'}
                                 </Text>
-                                <Text style={styles.previewStats}>
-                                    🪙 1,000 coins • 0 predictions
-                                </Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                                    <Image
+                                        source={require('../../../assets/silver-coin.png')}
+                                        style={{ width: 14, height: 14, marginRight: 4 }}
+                                        resizeMode="contain"
+                                    />
+                                    <Text style={styles.previewStats}>
+                                        1,000 coins • 0 predictions
+                                    </Text>
+                                </View>
                             </View>
                         </View>
                     </View>

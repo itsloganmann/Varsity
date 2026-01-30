@@ -12,6 +12,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, borderRadius, typography, gradients, shadows } from '../../theme';
+import { CoinBalance } from '../../components/common';
 import { useAuthStore } from '../../store/authStore';
 import { useFriendsStore } from '../../store/friendsStore';
 
@@ -127,9 +128,7 @@ export const AccountScreen: React.FC<Props> = ({ navigation }) => {
 
                             {/* Coin Balance Hero */}
                             <View style={styles.coinHero}>
-                                <Text style={styles.coinIcon}>🪙</Text>
-                                <Text style={styles.coinAmount}>{(user?.coins || 0).toLocaleString()}</Text>
-                                <Text style={styles.coinLabel}>Varsity Coins</Text>
+                                <CoinBalance amount={user?.coins || 0} size="lg" showLabel />
                             </View>
                         </View>
 

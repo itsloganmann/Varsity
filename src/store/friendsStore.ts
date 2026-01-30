@@ -62,7 +62,7 @@ const mockFriends: Friend[] = [
         isAtStadium: true,
         isOnline: true,
         stadiumSection: 'Block O',
-        stadiumPosition: { x: 35, y: 45 },
+        stadiumPosition: { x: 45, y: 10 }, // North End
         lastActivity: '2 min ago',
         lastPrediction: { market: 'OSU vs Michigan - Spread', pick: 'OSU -7', time: '5 min ago' },
         status: 'at_stadium',
@@ -80,7 +80,7 @@ const mockFriends: Friend[] = [
         isAtStadium: true,
         isOnline: true,
         stadiumSection: 'Section 12A',
-        stadiumPosition: { x: 62, y: 38 },
+        stadiumPosition: { x: 92, y: 30 }, // East Side
         lastActivity: 'Just now',
         status: 'at_stadium',
     },
@@ -113,7 +113,7 @@ const mockFriends: Friend[] = [
         isAtStadium: true,
         isOnline: true,
         stadiumSection: 'Block O',
-        stadiumPosition: { x: 42, y: 52 },
+        stadiumPosition: { x: 55, y: 8 }, // North End
         lastActivity: '1 min ago',
         status: 'at_stadium',
     },
@@ -145,7 +145,7 @@ const mockFriends: Friend[] = [
         isAtStadium: true,
         isOnline: true,
         stadiumSection: 'Section 8B',
-        stadiumPosition: { x: 78, y: 42 },
+        stadiumPosition: { x: 8, y: 60 }, // West Side
         lastActivity: '3 min ago',
         lastPrediction: { market: 'Total Points O/U', pick: 'Over 52.5', time: '8 min ago' },
         status: 'at_stadium',
@@ -178,7 +178,7 @@ const mockFriends: Friend[] = [
         isAtStadium: true,
         isOnline: true,
         stadiumSection: 'Section 15C',
-        stadiumPosition: { x: 25, y: 65 },
+        stadiumPosition: { x: 50, y: 92 }, // South End
         lastActivity: 'Just now',
         status: 'at_stadium',
     },
@@ -274,7 +274,7 @@ export const useFriendsStore = create<FriendsState>()((set, get) => ({
                     content: activity.content,
                 });
             }
-        }, 8000 + Math.random() * 7000);
+        }, 2000 + Math.random() * 3000); // Faster simulation (2-5s)
     },
 
     stopSimulation: () => {

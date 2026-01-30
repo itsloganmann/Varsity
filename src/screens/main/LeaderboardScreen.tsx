@@ -38,6 +38,8 @@ export const LeaderboardScreen: React.FC<Props> = ({ navigation }) => {
         { rank: 8, userId: 'user-15', displayName: 'PredictorPete', coins: 75900, winRate: 0.58, streak: 2 },
         { rank: 9, userId: 'user-16', displayName: 'CampusChamp', coins: 64500, winRate: 0.56, streak: 1 },
         { rank: 10, userId: 'user-18', displayName: 'VarsityVet', coins: 52800, winRate: 0.54, streak: 0 },
+        { rank: 11, userId: 'user-99', displayName: 'NewbieNed', coins: 1200, winRate: 0.30, streak: 0 },
+        { rank: 12, userId: 'user-98', displayName: 'LatecomerLarry', coins: 500, winRate: 0.10, streak: 0 },
     ];
 
     // Get base data based on selected period
@@ -63,9 +65,9 @@ export const LeaderboardScreen: React.FC<Props> = ({ navigation }) => {
     const currentUserEntry = leaderboardWithUser.find(e => e.isCurrentUser);
 
     const getRankColor = (rank: number) => {
-        if (rank === 1) return colors.rankGold;
-        if (rank === 2) return colors.rankSilver;
-        if (rank === 3) return colors.rankBronze;
+        if (rank === 1) return colors.gold;
+        if (rank === 2) return colors.silver;
+        if (rank === 3) return colors.bronze;
         return colors.textSecondary;
     };
 
@@ -286,15 +288,15 @@ const styles = StyleSheet.create({
     },
     podiumBarFirst: {
         height: 80,
-        backgroundColor: colors.rankGold + '40',
+        backgroundColor: colors.gold + '40',
     },
     podiumBarSecond: {
         height: 60,
-        backgroundColor: colors.rankSilver + '40',
+        backgroundColor: colors.silver + '40',
     },
     podiumBarThird: {
         height: 40,
-        backgroundColor: colors.rankBronze + '40',
+        backgroundColor: colors.bronze + '40',
     },
     yourPositionCard: {
         marginHorizontal: spacing.lg,
